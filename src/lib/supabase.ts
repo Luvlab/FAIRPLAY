@@ -24,6 +24,32 @@ export async function signInAnon() {
   return data?.user ?? null
 }
 
+export async function signUp(email: string, password: string, displayName: string) {
+  if (!supabase) return { error: 'Offline mode' }
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { display_name: displayName } },
+  })
+  if (error) return { error: error.message }
+  return { user: data.user }
+}
+
+export async function signIn(email: string, password: string) {
+  if (!supabase) return { error: 'Offline mode' }
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) return { error: error.message }
+  return {
+    user: data.user,
+    displayName: data.user?.user_metadata?.display_name as string | undefined,
+  }
+}
+
+export async function signOut() {
+  if (!supabase) return
+  await supabase.auth.signOut()
+}
+
 export async function getSession() {
   if (!supabase) return null
   const { data } = await supabase.auth.getSession()
