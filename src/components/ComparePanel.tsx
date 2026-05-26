@@ -3,7 +3,11 @@ import { useGameStore } from '../store/gameStore';
 import { SOCCER_CALLS } from '../data/soccerCalls';
 
 export default function ComparePanel() {
-  const { allCalls, voteCall, currentGame } = useGameStore();
+  const allCalls = useGameStore((s) => s.allCalls);
+  const voteCall = useGameStore((s) => s.voteCall);
+  const currentGame = useGameStore((s) => s.currentGame);
+  const isOnline = useGameStore((s) => s.isOnline);
+  const isLoading = useGameStore((s) => s.isLoading);
   const [filter, setFilter] = useState<'all' | 'official' | 'fans'>('all');
 
   const filtered = allCalls.filter((c) => {
@@ -64,8 +68,14 @@ export default function ComparePanel() {
             {f === 'official' ? '🏅 OFFICIAL' : f === 'fans' ? '👥 FANS' : '📋 ALL CALLS'}
           </button>
         ))}
-        <div className="ml-auto text-white/30 text-xs self-center pr-1">
-          {filtered.length} call{filtered.length !== 1 ? 's' : ''}
+        <div className="ml-auto flex items-center gap-2 text-xs self-center pr-1">
+          {isLoading && <span className="text-yellow-400/60">⏳</span>}
+          {!isLoading && (
+            <span style={{ color: isOnline ? '#00ff88' : '#555' }}>
+              {isOnline ? '🌐' : '📴'}
+            </span>
+          )}
+          <span className="text-white/30">{filtered.length} call{filtered.length !== 1 ? 's' : ''}</span>
         </div>
       </div>
 

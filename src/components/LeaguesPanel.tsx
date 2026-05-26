@@ -6,7 +6,8 @@ const AGE_GROUPS = ['Open / Senior', 'U21', 'U18', 'U16', 'U14', 'U12', 'U10', '
 const CONTINENTS = ['All', 'Europe', 'Americas', 'Asia', 'Africa', 'Oceania', 'International'];
 
 export default function LeaguesPanel() {
-  const { localLeagues, addLocalLeague } = useGameStore();
+  const localLeagues = useGameStore((s) => s.localLeagues);
+  const addLocalLeague = useGameStore((s) => s.addLocalLeague);
   const [view, setView] = useState<'world' | 'local' | 'add'>('world');
   const [continent, setContinent] = useState('All');
   const [search, setSearch] = useState('');
@@ -31,7 +32,6 @@ export default function LeaguesPanel() {
   const handleAddLeague = () => {
     if (!newLeague.name || !newLeague.country) return;
     addLocalLeague({
-      id: `local-${Date.now()}`,
       name: newLeague.name,
       country: newLeague.country,
       ageGroup: newLeague.ageGroup,

@@ -3,7 +3,12 @@ import { SOCCER_CALLS, CALL_CATEGORIES } from '../data/soccerCalls';
 import { useGameStore } from '../store/gameStore';
 
 export default function RefereePanel() {
-  const { showCardOverlay, makeCall, activeCategory, setActiveCategory, currentGame } = useGameStore();
+  const showCardOverlay = useGameStore((s) => s.showCardOverlay);
+  const submitLiveCall = useGameStore((s) => s.submitLiveCall);
+  const activeCategory = useGameStore((s) => s.activeCategory);
+  const setActiveCategory = useGameStore((s) => s.setActiveCategory);
+  const currentGame = useGameStore((s) => s.currentGame);
+  const isOnline = useGameStore((s) => s.isOnline);
   const [lastCall, setLastCall] = useState<string | null>(null);
   const lastCallTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -11,29 +16,12 @@ export default function RefereePanel() {
     ? SOCCER_CALLS
     : SOCCER_CALLS.filter((c) => c.category === activeCategory);
 
-  const handleCall = (callId: string, callName: string, _category: string, _color: string) => {
-    // Show card overlay for card calls
-    if (callId === 'yellow' || callId === 'second_yellow') {
-      showCardOverlay('yellow');
-    } else if (callId === 'red' || callId === 'spitting' || callId === 'violent' || callId === 'biting') {
-      showCardOverlay('red');
-    }
+  const handleCall = (callId: string, callName: string) => {
+    if (callId === 'yellow' || callId === 'second_yellow') showCardOverlay('yellow');
+    else if (callId === 'red' || callId === 'spitting' || callId === 'violent' || callId === 'biting') showCardOverlay('red');
 
-    // Record the call
-    const newCall = {
-      id: `call-${Date.now()}`,
-      callId,
-      callName,
-      minute: currentGame?.minute ?? 0,
-      userId: 'me',
-      userName: 'You',
-      timestamp: Date.now(),
-      agree: 1,
-      disagree: 0,
-    };
-    makeCall(newCall);
+    submitLiveCall(callId, callName, currentGame?.minute ?? 0);
 
-    // Flash feedback
     setLastCall(callId);
     clearTimeout(lastCallTimer.current);
     lastCallTimer.current = setTimeout(() => setLastCall(null), 1200);
@@ -88,7 +76,7 @@ export default function RefereePanel() {
                 boxShadow: isActive ? `0 0 20px ${call.color}66` : 'none',
                 transition: 'all 0.15s ease',
               }}
-              onClick={() => handleCall(call.id, call.name, call.category, call.color)}
+              onClick={() => handleCall(call.id, call.name)}
             >
               {/* Category color bar */}
               <div
@@ -124,7 +112,7 @@ export default function RefereePanel() {
             flexShrink: 0,
           }}
         >
-          📢 CALL SUBMITTED — {SOCCER_CALLS.find((c) => c.id === lastCall)?.name.toUpperCase()}
+          {isOnline ? '🌐' : '📴'} CALL SUBMITTED — {SOCCER_CALLS.find((c) => c.id === lastCall)?.name.toUpperCase()}
         </div>
       )}
     </div>

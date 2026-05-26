@@ -15,7 +15,11 @@ const NAV_TABS = [
 ];
 
 export default function App() {
-  const { activeTab, setActiveTab, currentGame } = useGameStore();
+  const activeTab = useGameStore((s) => s.activeTab);
+  const setActiveTab = useGameStore((s) => s.setActiveTab);
+  const currentGame = useGameStore((s) => s.currentGame);
+  const isOnline = useGameStore((s) => s.isOnline);
+  const isLoading = useGameStore((s) => s.isLoading);
 
   return (
     <div
@@ -46,7 +50,10 @@ export default function App() {
           </div>
           <div>
             <div className="font-black text-sm tracking-widest" style={{ color: '#00d4ff', lineHeight: 1 }}>FAIRPLAY</div>
-            <div className="text-xs text-white/25 tracking-wider" style={{ fontSize: 9 }}>REFEREE ENGINE</div>
+            <div className="flex items-center gap-1" style={{ fontSize: 9 }}>
+              <div className="w-1.5 h-1.5 rounded-full" style={{ background: isLoading ? '#ffaa00' : isOnline ? '#00ff88' : '#666', flexShrink: 0 }} />
+              <span className="text-white/25 tracking-wider">{isLoading ? 'CONNECTING' : isOnline ? 'LIVE' : 'OFFLINE'}</span>
+            </div>
           </div>
         </div>
 
