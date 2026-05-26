@@ -28,31 +28,51 @@ export default function App() {
     >
       {/* Header */}
       <header
-        className="flex items-center px-4"
+        className="flex items-center px-3 md:px-6"
         style={{
-          height: 52,
+          height: 'clamp(52px, 7vw, 72px)',
           background: 'linear-gradient(90deg, #0d1117, #111827)',
           borderBottom: '1px solid rgba(255,255,255,0.07)',
           flexShrink: 0,
           zIndex: 20,
         }}
       >
-        {/* Logo */}
+        {/* Logo — no background, clean emoji + wordmark */}
         <div className="flex items-center gap-2 mr-4">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm"
+          <span
             style={{
-              background: 'linear-gradient(135deg, #00d4ff, #0066ff)',
-              boxShadow: '0 0 12px rgba(0,212,255,0.4)',
+              fontSize: 'clamp(26px, 4vw, 42px)',
+              lineHeight: 1,
+              filter: 'drop-shadow(0 0 8px rgba(0,212,255,0.5))',
             }}
           >
             ⚽
-          </div>
+          </span>
           <div>
-            <div className="font-black text-sm tracking-widest" style={{ color: '#00d4ff', lineHeight: 1 }}>FAIRPLAY</div>
-            <div className="flex items-center gap-1" style={{ fontSize: 9 }}>
-              <div className="w-1.5 h-1.5 rounded-full" style={{ background: isLoading ? '#ffaa00' : isOnline ? '#00ff88' : '#666', flexShrink: 0 }} />
-              <span className="text-white/25 tracking-wider">{isLoading ? 'CONNECTING' : isOnline ? 'LIVE' : 'OFFLINE'}</span>
+            <div
+              className="font-black tracking-widest"
+              style={{
+                color: '#00d4ff',
+                lineHeight: 1,
+                fontSize: 'clamp(13px, 2vw, 20px)',
+                textShadow: '0 0 20px rgba(0,212,255,0.4)',
+              }}
+            >
+              FAIRPLAY
+            </div>
+            <div className="flex items-center gap-1" style={{ fontSize: 'clamp(8px, 1.2vw, 11px)', marginTop: 2 }}>
+              <div
+                className="rounded-full"
+                style={{
+                  width: 'clamp(5px, 0.8vw, 7px)',
+                  height: 'clamp(5px, 0.8vw, 7px)',
+                  background: isLoading ? '#ffaa00' : isOnline ? '#00ff88' : '#666',
+                  flexShrink: 0,
+                }}
+              />
+              <span className="text-white/25 tracking-wider">
+                {isLoading ? 'CONNECTING' : isOnline ? 'LIVE' : 'OFFLINE'}
+              </span>
             </div>
           </div>
         </div>
@@ -63,11 +83,35 @@ export default function App() {
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg mx-auto"
             style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
           >
-            <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#ff4444', boxShadow: '0 0 6px #ff4444', animation: 'pulse 1s infinite' }} />
-            <span className="text-xs font-bold text-white/60">
-              {currentGame.homeTeam} <span style={{ color: '#00d4ff' }}>{currentGame.homeScore}–{currentGame.awayScore}</span> {currentGame.awayTeam}
+            <div
+              className="rounded-full"
+              style={{
+                width: 6,
+                height: 6,
+                background: '#ff4444',
+                boxShadow: '0 0 6px #ff4444',
+                animation: 'pulse 1s infinite',
+                flexShrink: 0,
+              }}
+            />
+            <span
+              className="font-bold text-white/60"
+              style={{ fontSize: 'clamp(10px, 1.5vw, 14px)' }}
+            >
+              {currentGame.homeTeam}{' '}
+              <span style={{ color: '#00d4ff' }}>
+                {currentGame.homeScore}–{currentGame.awayScore}
+              </span>{' '}
+              {currentGame.awayTeam}
             </span>
-            <span className="text-xs font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,68,68,0.15)', color: '#ff5555', fontSize: 9 }}>
+            <span
+              className="font-bold px-1.5 py-0.5 rounded"
+              style={{
+                background: 'rgba(255,68,68,0.15)',
+                color: '#ff5555',
+                fontSize: 'clamp(8px, 1vw, 11px)',
+              }}
+            >
               {currentGame.minute}'
             </span>
           </div>
@@ -76,8 +120,13 @@ export default function App() {
         {/* Sport badge */}
         <div className="ml-auto">
           <div
-            className="text-xs font-bold px-2 py-1 rounded"
-            style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)', color: '#00d4ff' }}
+            className="font-bold px-2 py-1 rounded"
+            style={{
+              background: 'rgba(0,212,255,0.1)',
+              border: '1px solid rgba(0,212,255,0.2)',
+              color: '#00d4ff',
+              fontSize: 'clamp(9px, 1.3vw, 13px)',
+            }}
           >
             ⚽ SOCCER
           </div>
@@ -95,9 +144,9 @@ export default function App() {
 
       {/* Bottom nav */}
       <nav
-        className="flex items-center justify-around px-2 pb-safe"
+        className="flex items-center justify-around px-2"
         style={{
-          height: 60,
+          height: 'clamp(60px, 8vw, 80px)',
           background: 'linear-gradient(0deg, #0a0e14, #0d1117)',
           borderTop: '1px solid rgba(255,255,255,0.07)',
           flexShrink: 0,
@@ -110,16 +159,21 @@ export default function App() {
           return (
             <button
               key={tab.id}
-              className="call-btn flex flex-col items-center gap-0.5 flex-1 py-2"
+              className="call-btn flex flex-col items-center gap-1 flex-1 py-2 relative"
               onClick={() => setActiveTab(tab.id)}
             >
-              <span style={{ fontSize: 18, filter: isActive ? 'none' : 'grayscale(0.8) opacity(0.5)' }}>
+              <span
+                style={{
+                  fontSize: 'clamp(18px, 3vw, 28px)',
+                  filter: isActive ? 'none' : 'grayscale(0.8) opacity(0.5)',
+                }}
+              >
                 {tab.emoji}
               </span>
               <span
                 className="font-bold"
                 style={{
-                  fontSize: 8,
+                  fontSize: 'clamp(8px, 1.2vw, 12px)',
                   letterSpacing: '0.6px',
                   color: isActive ? '#00d4ff' : 'rgba(255,255,255,0.3)',
                 }}
@@ -131,7 +185,7 @@ export default function App() {
                   className="absolute"
                   style={{
                     bottom: 0,
-                    width: 24,
+                    width: 'clamp(20px, 3vw, 32px)',
                     height: 2,
                     background: '#00d4ff',
                     borderRadius: '2px 2px 0 0',

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { SOCCER_CALLS, CALL_CATEGORIES } from '../data/soccerCalls';
 import { useGameStore } from '../store/gameStore';
 
@@ -11,6 +11,13 @@ export default function RefereePanel() {
   const isOnline = useGameStore((s) => s.isOnline);
   const [lastCall, setLastCall] = useState<string | null>(null);
   const lastCallTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [winW, setWinW] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handler = () => setWinW(window.innerWidth);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
 
   const filtered = activeCategory === 'all'
     ? SOCCER_CALLS
@@ -27,9 +34,15 @@ export default function RefereePanel() {
     lastCallTimer.current = setTimeout(() => setLastCall(null), 1200);
   };
 
-  // Responsive: figure out grid columns from category count
+  // Responsive columns: scale up on larger screens
   const catCount = filtered.length;
-  const cols = catCount <= 6 ? 3 : catCount <= 12 ? 4 : catCount <= 20 ? 5 : 6;
+  const baseCols = catCount <= 6 ? 3 : catCount <= 12 ? 4 : catCount <= 20 ? 5 : 6;
+  const extraCols = winW >= 1280 ? 3 : winW >= 1024 ? 2 : winW >= 768 ? 1 : 0;
+  const cols = baseCols + extraCols;
+
+  // Responsive emoji + text sizes
+  const emojiSize = winW >= 1024 ? '2em' : winW >= 768 ? '1.7em' : '1.4em';
+  const labelSize = `clamp(8px, ${winW >= 1024 ? '1.1vw' : winW >= 768 ? '1.3vw' : '1.6vw'}, ${winW >= 1024 ? '14px' : '12px'})`;
 
   return (
     <div className="flex flex-col h-full" style={{ background: 'linear-gradient(180deg, #0d1117 0%, #0a1420 100%)' }}>
@@ -50,14 +63,14 @@ export default function RefereePanel() {
         ))}
       </div>
 
-      {/* Call grid — fills remaining height */}
+      {/* Call grid — fills remaining height, no scroll */}
       <div
         className="flex-1 p-2 overflow-hidden"
         style={{
           display: 'grid',
           gridTemplateColumns: `repeat(${cols}, 1fr)`,
           gridAutoRows: '1fr',
-          gap: 6,
+          gap: winW >= 768 ? 8 : 6,
         }}
       >
         {filtered.map((call) => {
@@ -80,16 +93,16 @@ export default function RefereePanel() {
             >
               {/* Category color bar */}
               <div
-                className="absolute top-0 left-0 right-0 h-0.5"
-                style={{ background: call.color, opacity: isActive ? 1 : 0.4 }}
+                className="absolute top-0 left-0 right-0"
+                style={{ height: winW >= 768 ? 3 : 2, background: call.color, opacity: isActive ? 1 : 0.4 }}
               />
 
-              <span style={{ fontSize: '1.4em', lineHeight: 1 }}>{call.emoji}</span>
+              <span style={{ fontSize: emojiSize, lineHeight: 1 }}>{call.emoji}</span>
 
               <span
                 className="font-black text-center leading-none"
                 style={{
-                  fontSize: 'clamp(7px, 1.2vw, 11px)',
+                  fontSize: labelSize,
                   color: isActive ? call.color : 'rgba(255,255,255,0.85)',
                   letterSpacing: '0.5px',
                   fontFamily: 'system-ui, sans-serif',
@@ -105,11 +118,12 @@ export default function RefereePanel() {
       {/* Last call indicator */}
       {lastCall && (
         <div
-          className="flex items-center justify-center py-2 text-xs font-bold tracking-widest"
+          className="flex items-center justify-center py-2 font-bold tracking-widest"
           style={{
             borderTop: '1px solid rgba(255,255,255,0.06)',
             color: SOCCER_CALLS.find((c) => c.id === lastCall)?.color ?? '#fff',
             flexShrink: 0,
+            fontSize: 'clamp(10px, 1.5vw, 14px)',
           }}
         >
           {isOnline ? '🌐' : '📴'} CALL SUBMITTED — {SOCCER_CALLS.find((c) => c.id === lastCall)?.name.toUpperCase()}

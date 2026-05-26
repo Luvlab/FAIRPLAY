@@ -56,23 +56,56 @@ html, body, #root {
 }
 .pulse-glow { animation: pulse-glow 1.5s infinite; }
 
+/* Nav tabs — scale up on larger screens */
 .nav-tab {
-  padding: 6px 14px; border-radius: 8px; cursor: pointer;
-  transition: all 0.2s; font-size: 11px; font-weight: 700;
-  letter-spacing: 0.8px; text-transform: uppercase; white-space: nowrap;
+  padding: 5px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: clamp(10px, 1.4vw, 13px);
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
-.nav-tab.active { background: rgba(0,212,255,0.15); color: #00d4ff; border: 1px solid rgba(0,212,255,0.3); }
+.nav-tab.active {
+  background: rgba(0,212,255,0.15);
+  color: #00d4ff;
+  border: 1px solid rgba(0,212,255,0.3);
+}
 .nav-tab:not(.active) { color: rgba(255,255,255,0.4); }
 
+@media (min-width: 768px) {
+  .nav-tab {
+    padding: 7px 16px;
+    border-radius: 10px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .nav-tab {
+    padding: 8px 20px;
+    border-radius: 10px;
+  }
+}
+
+/* Editor tools — scale up on larger screens */
 .editor-tool {
-  width: 42px; height: 42px; border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all 0.15s;
+  width: clamp(36px, 5vw, 52px);
+  height: clamp(36px, 5vw, 52px);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
   border: 1px solid rgba(255,255,255,0.1);
   background: rgba(255,255,255,0.05);
+  font-size: clamp(14px, 2vw, 22px);
 }
 .editor-tool:hover, .editor-tool.active {
-  background: rgba(0,212,255,0.2); border-color: rgba(0,212,255,0.5);
+  background: rgba(0,212,255,0.2);
+  border-color: rgba(0,212,255,0.5);
   box-shadow: 0 0 12px rgba(0,212,255,0.3);
 }
 
