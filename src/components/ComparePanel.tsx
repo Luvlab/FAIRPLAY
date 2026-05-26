@@ -122,7 +122,7 @@ export default function ComparePanel() {
 
                 <div className="flex-1 min-w-0">
                   {/* Call name + badge */}
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span
                       className="font-bold truncate"
                       style={{ color: cd?.color ?? '#fff', fontSize: 'clamp(12px, 1.8vw, 16px)' }}
@@ -135,6 +135,14 @@ export default function ComparePanel() {
                         style={{ background: 'rgba(0,212,255,0.2)', color: '#00d4ff', fontSize: 'clamp(8px, 1vw, 11px)' }}
                       >
                         OFFICIAL
+                      </span>
+                    )}
+                    {call.playerName && (
+                      <span
+                        className="font-bold px-1.5 py-0.5 rounded flex-shrink-0"
+                        style={{ background: `${cd?.color ?? '#888'}22`, color: cd?.color ?? '#aaa', border: `1px solid ${cd?.color ?? '#888'}44`, fontSize: 'clamp(8px, 1vw, 11px)' }}
+                      >
+                        #{call.playerName}
                       </span>
                     )}
                   </div>

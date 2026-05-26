@@ -66,6 +66,7 @@ export interface CallInsert {
   user_id: string
   user_name: string
   is_official?: boolean
+  player_name?: string
   lat?: number
   lng?: number
 }

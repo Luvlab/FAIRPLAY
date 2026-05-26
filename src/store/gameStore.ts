@@ -24,6 +24,7 @@ export interface RefereeCall {
   minute: number;
   userId: string;
   userName: string;
+  playerName?: string;
   timestamp: number;
   location?: { lat: number; lng: number };
   agree: number;
@@ -81,12 +82,27 @@ function rowToCall(row: any): RefereeCall {
     minute: row.minute,
     userId: row.user_id,
     userName: row.user_name,
+    playerName: row.player_name ?? undefined,
     timestamp: new Date(row.created_at).getTime(),
     agree: row.agree_count ?? 0,
     disagree: row.disagree_count ?? 0,
     isOfficial: row.is_official ?? false,
     location: row.lat && row.lng ? { lat: row.lat, lng: row.lng } : undefined,
   };
+}
+
+/** True when calls can be submitted (game is actively playing) */
+export function isGameLive(status?: string): boolean {
+  return status === 'live' || status === 'ht' || status === 'et' || status === 'pens';
+}
+
+/** Compute current live minute from a fetched base minute + elapsed wall time */
+export function computeLiveMinute(baseMinute: number, fetchedAt: number, status?: string): number {
+  if (status === 'ht') return 45;
+  if (status === 'live' || status === 'et' || status === 'pens') {
+    return Math.min(120, baseMinute + Math.floor((Date.now() - fetchedAt) / 60_000));
+  }
+  return baseMinute;
 }
 
 // Fallback game shown before user picks a real one
@@ -108,6 +124,8 @@ const DEMO_GAME: Game = {
 interface GameStore {
   // Game
   currentGame: Game | null;
+  /** Wall-clock ms when currentGame.minute was last captured — drives live clock */
+  clockFetchedAt: number;
   // Calls
   selectedCall: SoccerCall | null;
   cardType: 'yellow' | 'red' | null;
@@ -137,7 +155,7 @@ interface GameStore {
   addMedia: (item: MediaItem) => void;
   uploadAndAddMedia: (file: File, minute: number, caption: string, location: { lat: number; lng: number } | null) => Promise<void>;
   makeCall: (call: RefereeCall) => void;
-  submitLiveCall: (callId: string, callName: string, minute: number, location?: { lat: number; lng: number }) => Promise<void>;
+  submitLiveCall: (callId: string, callName: string, minute: number, location?: { lat: number; lng: number }, playerName?: string) => Promise<void>;
   voteCall: (callId: string, vote: 'agree' | 'disagree') => void;
   setActiveCategory: (cat: string) => void;
   addLocalLeague: (league: Omit<LocalLeague, 'id'>) => Promise<void>;
@@ -152,6 +170,7 @@ interface GameStore {
 
 export const useGameStore = create<GameStore>((set, get) => ({
   currentGame: DEMO_GAME,
+  clockFetchedAt: Date.now(),
   selectedCall: null,
   cardType: null,
   showCard: false,
@@ -217,7 +236,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   selectMatch: (match) => {
     const game = matchToGame(match);
-    set({ currentGame: game, allCalls: [], userCalls: [] });
+    set({ currentGame: game, allCalls: [], userCalls: [], clockFetchedAt: Date.now() });
     // Subscribe to calls for the new game
     getGameCalls(game.id).then((rows) => {
       if (rows.length > 0) set({ allCalls: rows.map(rowToCall) });
@@ -268,8 +287,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   makeCall: (call) => set((s) => ({ userCalls: [call, ...s.userCalls], allCalls: [call, ...s.allCalls] })),
 
-  submitLiveCall: async (callId, callName, minute, location) => {
+  submitLiveCall: async (callId, callName, minute, location, playerName) => {
     const { userId, currentGame, userProfile } = get();
+
+    // Block calls on non-live games
+    if (currentGame && !isGameLive(currentGame.status)) return;
+
     const uid = userId ?? `fan-${Math.random().toString(36).slice(2, 8)}`;
     const gameId = currentGame?.id ?? DEMO_GAME_ID;
     const displayName = userProfile?.displayName ?? 'Fan';
@@ -278,13 +301,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const optimistic: RefereeCall = {
       id: optId, callId, callName, minute,
       userId: uid, userName: 'You',
+      playerName: playerName?.trim() || undefined,
       timestamp: Date.now(), agree: 1, disagree: 0,
       isOfficial: false, location,
     };
     set((s) => ({ userCalls: [optimistic, ...s.userCalls], allCalls: [optimistic, ...s.allCalls] }));
 
     if (supabase) {
-      const row = await sbSubmitCall({ game_id: gameId, call_id: callId, call_name: callName, minute, user_id: uid, user_name: displayName, lat: location?.lat, lng: location?.lng });
+      const row = await sbSubmitCall({
+        game_id: gameId, call_id: callId, call_name: callName,
+        minute, user_id: uid, user_name: displayName,
+        player_name: playerName?.trim() || undefined,
+        lat: location?.lat, lng: location?.lng,
+      });
       if (row) {
         const real = rowToCall(row);
         set((s) => ({ allCalls: s.allCalls.map((c) => c.id === optId ? real : c), userCalls: s.userCalls.map((c) => c.id === optId ? real : c) }));
