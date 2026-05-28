@@ -2,29 +2,36 @@ import { useEffect, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
 
 export default function CardOverlay() {
-  const showCard   = useGameStore((s) => s.showCard);
-  const cardType   = useGameStore((s) => s.cardType);
+  const showCard    = useGameStore((s) => s.showCard);
+  const cardType    = useGameStore((s) => s.cardType);
   const dismissCard = useGameStore((s) => s.dismissCard);
+  const setActiveTab = useGameStore((s) => s.setActiveTab);
 
   const tapCount = useRef(0);
   const tapTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const dismiss = () => {
+    dismissCard();
+    setActiveTab('compare');
+  };
 
   const handleTap = () => {
     tapCount.current += 1;
     clearTimeout(tapTimer.current);
     if (tapCount.current >= 2) {
       tapCount.current = 0;
-      dismissCard();
+      dismiss();
     } else {
       tapTimer.current = setTimeout(() => { tapCount.current = 0; }, 400);
     }
   };
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') dismissCard(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') dismiss(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [dismissCard]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!showCard || !cardType) return null;
 
@@ -38,7 +45,7 @@ export default function CardOverlay() {
         animation: 'cardFlash 0.15s ease-out',
       }}
       onClick={handleTap}
-      onTouchEnd={handleTap}
+      onTouchEnd={(e) => { e.preventDefault(); handleTap(); }}
     />
   );
 }

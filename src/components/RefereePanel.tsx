@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { SOCCER_CALLS, CALL_CATEGORIES } from '../data/soccerCalls';
 import { useGameStore, isGameLive, computeLiveMinute } from '../store/gameStore';
+import { playWhistle } from '../lib/whistle';
+
+const CARD_CALL_IDS = new Set(['yellow', 'second_yellow', 'red', 'spitting', 'violent', 'biting']);
 
 interface PendingCall {
   callId: string;
@@ -79,9 +82,6 @@ export default function RefereePanel() {
   const submitPendingCall = (call: PendingCall, name: string) => {
     clearInterval(countdownTimer.current);
 
-    if (call.callId === 'yellow' || call.callId === 'second_yellow') showCardOverlay('yellow');
-    else if (['red', 'spitting', 'violent', 'biting'].includes(call.callId)) showCardOverlay('red');
-
     submitLiveCall(call.callId, call.callName, call.minute, undefined, name.trim() || undefined);
 
     setLastCall(call.callId);
@@ -94,6 +94,23 @@ export default function RefereePanel() {
 
   const handleCallTap = (callId: string, callName: string) => {
     if (!gameLive) return;
+
+    // Always blow the whistle
+    playWhistle();
+
+    // Card calls: skip the sheet — go straight to full-screen colour + submit
+    if (CARD_CALL_IDS.has(callId)) {
+      const cardColour = (callId === 'yellow' || callId === 'second_yellow') ? 'yellow' : 'red';
+      showCardOverlay(cardColour);
+      void submitLiveCall(callId, callName, liveMinute);
+
+      setLastCall(callId);
+      clearTimeout(lastCallTimer.current);
+      lastCallTimer.current = setTimeout(() => setLastCall(null), 2500);
+      return;
+    }
+
+    // All other calls: open the tagging sheet as before
     const meta = SOCCER_CALLS.find((c) => c.id === callId)!;
     setPendingCall({ callId, callName, emoji: meta.emoji, color: meta.color, minute: liveMinute });
   };
