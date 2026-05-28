@@ -9,6 +9,7 @@ import StudioPanel from './components/StudioPanel';
 import ShopPanel from './components/ShopPanel';
 import AuthModal from './components/AuthModal';
 import GameSelector from './components/GameSelector';
+import WelcomeScreen from './components/WelcomeScreen';
 import { getSportName } from './lib/sportName';
 
 const sportName = getSportName();
@@ -32,6 +33,18 @@ export default function App() {
   const openAuthModal  = useGameStore((s) => s.openAuthModal);
 
   const [showGameSelector, setShowGameSelector] = useState(false);
+  const [welcomed, setWelcomed] = useState(() => !!localStorage.getItem('fp_welcomed'));
+
+  if (!welcomed) {
+    return (
+      <WelcomeScreen
+        onEnter={() => {
+          localStorage.setItem('fp_welcomed', '1');
+          setWelcomed(true);
+        }}
+      />
+    );
+  }
 
   return (
     <div
