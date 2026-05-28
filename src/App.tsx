@@ -10,20 +10,10 @@ import ShopPanel from './components/ShopPanel';
 import AuthModal from './components/AuthModal';
 import GameSelector from './components/GameSelector';
 import WelcomeScreen from './components/WelcomeScreen';
-import { getSportName } from './lib/sportName';
-
-const sportName = getSportName();
-
-const NAV_TABS = [
-  { id: 'referee'  as const, label: 'REFEREE',  emoji: '🏅' },
-  { id: 'compare'  as const, label: 'COMPARE',  emoji: '👥' },
-  { id: 'leagues'  as const, label: 'LEAGUES',  emoji: '🌍' },
-  { id: 'timeline' as const, label: 'TIMELINE', emoji: '📹' },
-  { id: 'studio'   as const, label: 'STUDIO',   emoji: '🔮' },
-  { id: 'shop'     as const, label: 'SHOP',     emoji: '🛒' },
-];
+import { useT } from './context/I18nContext';
 
 export default function App() {
+  const t              = useT();
   const activeTab      = useGameStore((s) => s.activeTab);
   const setActiveTab   = useGameStore((s) => s.setActiveTab);
   const currentGame    = useGameStore((s) => s.currentGame);
@@ -31,6 +21,15 @@ export default function App() {
   const isLoading      = useGameStore((s) => s.isLoading);
   const userProfile    = useGameStore((s) => s.userProfile);
   const openAuthModal  = useGameStore((s) => s.openAuthModal);
+
+  const NAV_TABS = [
+    { id: 'referee'  as const, label: t.navReferee,  emoji: '🏅' },
+    { id: 'compare'  as const, label: t.navCompare,  emoji: '👥' },
+    { id: 'leagues'  as const, label: t.navLeagues,  emoji: '🌍' },
+    { id: 'timeline' as const, label: t.navTimeline, emoji: '📹' },
+    { id: 'studio'   as const, label: t.navStudio,   emoji: '🔮' },
+    { id: 'shop'     as const, label: t.navShop,     emoji: '🛒' },
+  ];
 
   const [showGameSelector, setShowGameSelector] = useState(false);
   const [welcomed, setWelcomed] = useState(() => !!localStorage.getItem('fp_welcomed'));
@@ -86,7 +85,7 @@ export default function App() {
                 style={{ width: 'clamp(5px, 0.8vw, 7px)', height: 'clamp(5px, 0.8vw, 7px)', background: isLoading ? '#ffaa00' : isOnline ? '#00ff88' : '#666' }}
               />
               <span className="text-white/25 tracking-wider">
-                {isLoading ? 'CONNECTING' : isOnline ? 'LIVE' : 'OFFLINE'}
+                {isLoading ? 'CONNECTING' : isOnline ? t.statusLive : t.statusOffline}
               </span>
             </div>
           </div>
@@ -108,18 +107,18 @@ export default function App() {
               </span>
               {(currentGame.status === 'live' || currentGame.status === 'ht') && (
                 <span className="font-bold px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: 'rgba(255,68,68,0.15)', color: '#ff5555', fontSize: 'clamp(8px, 1vw, 11px)' }}>
-                  {currentGame.status === 'ht' ? 'HT' : `${currentGame.minute}'`}
+                  {currentGame.status === 'ht' ? t.statusHt : `${currentGame.minute}'`}
                 </span>
               )}
               {currentGame.status === 'pre' && (
-                <span className="font-bold px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: 'rgba(0,212,255,0.1)', color: '#00d4ff', fontSize: 'clamp(8px, 1vw, 11px)' }}>UPCOMING</span>
+                <span className="font-bold px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: 'rgba(0,212,255,0.1)', color: '#00d4ff', fontSize: 'clamp(8px, 1vw, 11px)' }}>{t.statusUpcoming}</span>
               )}
               {currentGame.status === 'ft' && (
-                <span className="font-bold px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', fontSize: 'clamp(8px, 1vw, 11px)' }}>FT</span>
+                <span className="font-bold px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', fontSize: 'clamp(8px, 1vw, 11px)' }}>{t.statusFt}</span>
               )}
             </>
           ) : (
-            <span className="text-white/40 text-xs">⚽ Select a match</span>
+            <span className="text-white/40 text-xs">⚽ {t.selectAMatch}</span>
           )}
           <span className="text-white/20 text-xs flex-shrink-0">▼</span>
         </button>
@@ -130,7 +129,7 @@ export default function App() {
             className="font-bold px-2 py-1 rounded hidden md:block"
             style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)', color: '#00d4ff', fontSize: 'clamp(9px, 1.3vw, 13px)' }}
           >
-            ⚽ {sportName.toUpperCase()}
+            ⚽ {t.sport.toUpperCase()}
           </div>
 
           {/* Auth button */}
@@ -146,7 +145,7 @@ export default function App() {
           >
             <span>{userProfile ? '✓' : '👤'}</span>
             <span className="hidden sm:inline">
-              {userProfile ? userProfile.displayName : 'Sign Up'}
+              {userProfile ? userProfile.displayName : t.signUp}
             </span>
           </button>
         </div>

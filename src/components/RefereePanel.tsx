@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { SOCCER_CALLS, CALL_CATEGORIES } from '../data/soccerCalls';
 import { useGameStore, isGameLive, computeLiveMinute } from '../store/gameStore';
 import { playWhistle } from '../lib/whistle';
+import { useT } from '../context/I18nContext';
 
 const CARD_CALL_IDS = new Set(['yellow', 'second_yellow', 'red', 'spitting', 'violent', 'biting']);
 
@@ -29,6 +30,7 @@ function useLiveMinute(): number {
 }
 
 export default function RefereePanel() {
+  const t                = useT();
   const showCardOverlay  = useGameStore((s) => s.showCardOverlay);
   const submitLiveCall   = useGameStore((s) => s.submitLiveCall);
   const activeCategory   = useGameStore((s) => s.activeCategory);
@@ -164,14 +166,14 @@ export default function RefereePanel() {
                 className="rounded-full"
                 style={{ width: 6, height: 6, background: '#ff4444', boxShadow: '0 0 5px #ff4444', animation: 'pulse 1s infinite', flexShrink: 0 }}
               />
-              {currentGame?.status === 'ht' ? 'HT' : `${liveMinute}'`}
+              {currentGame?.status === 'ht' ? t.statusHt : `${liveMinute}'`}
             </div>
           ) : (
             <div
               className="px-2.5 py-1 rounded-lg font-bold"
               style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)', fontSize: 'clamp(9px, 1.2vw, 12px)' }}
             >
-              {currentGame?.status === 'pre' ? 'NOT STARTED' : currentGame?.status === 'ft' ? 'FULL TIME' : 'OFFLINE'}
+              {currentGame?.status === 'pre' ? t.statusNotStarted : currentGame?.status === 'ft' ? t.statusFullTime : t.statusOffline}
             </div>
           )}
         </div>
@@ -238,12 +240,12 @@ export default function RefereePanel() {
               {currentGame.status === 'pre' ? '⏰' : '📋'}
             </span>
             <div className="font-black" style={{ color: 'rgba(255,255,255,0.7)', fontSize: 'clamp(13px, 1.8vw, 16px)' }}>
-              {currentGame.status === 'pre' ? 'Match hasn\'t started' : 'Match has ended'}
+              {currentGame.status === 'pre' ? t.matchNotStarted : t.matchEnded}
             </div>
             <div className="text-white/35" style={{ fontSize: 'clamp(10px, 1.3vw, 13px)' }}>
               {currentGame.status === 'pre'
-                ? 'Calls can only be made during the live match'
-                : `Final score: ${currentGame.homeTeam} ${currentGame.homeScore}–${currentGame.awayScore} ${currentGame.awayTeam}`}
+                ? t.callsOnlyLive
+                : `${t.finalScore}: ${currentGame.homeTeam} ${currentGame.homeScore}–${currentGame.awayScore} ${currentGame.awayTeam}`}
             </div>
           </div>
         </div>
@@ -260,7 +262,7 @@ export default function RefereePanel() {
             fontSize: 'clamp(10px, 1.5vw, 14px)',
           }}
         >
-          {isOnline ? '🌐' : '📴'} {SOCCER_CALLS.find((c) => c.id === lastCall)?.name.toUpperCase()} — SUBMITTED
+          {isOnline ? '🌐' : '📴'} {SOCCER_CALLS.find((c) => c.id === lastCall)?.name.toUpperCase()} — {t.submitted}
         </div>
       )}
 
@@ -347,7 +349,7 @@ export default function RefereePanel() {
                 className="block font-bold uppercase tracking-wider mb-1.5"
                 style={{ color: 'rgba(255,255,255,0.45)', fontSize: 'clamp(9px, 1.2vw, 11px)' }}
               >
-                #️⃣ Player name or number — optional
+                #️⃣ {t.playerOptional}
               </label>
               <input
                 ref={playerInputRef}
@@ -383,14 +385,14 @@ export default function RefereePanel() {
                   }}
                   onClick={() => submitPendingCall(pendingCall, playerName)}
                 >
-                  ⚡ SUBMIT NOW
+                  {t.submitNow}
                 </button>
                 <button
                   className="call-btn px-4 rounded-xl font-bold"
                   style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.45)', fontSize: 'clamp(12px, 1.5vw, 14px)' }}
                   onClick={cancelPending}
                 >
-                  Cancel
+                  {t.cancel}
                 </button>
               </div>
             </div>

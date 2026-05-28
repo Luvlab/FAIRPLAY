@@ -1,54 +1,27 @@
 import { useGameStore } from '../store/gameStore';
-import { getSportName } from '../lib/sportName';
-
-const sport = getSportName();
-
-const FEATURES = [
-  {
-    emoji: '🏅',
-    name: 'Referee',
-    desc: `Call every foul, card and restart in real time on any live ${sport} match`,
-    color: '#00d4ff',
-  },
-  {
-    emoji: '👥',
-    name: 'Compare',
-    desc: 'See how your calls stack up against every fan — and the official game',
-    color: '#aa88ff',
-  },
-  {
-    emoji: '🌍',
-    name: 'Leagues',
-    desc: 'Every league on the planet, or create your own local one for any age group',
-    color: '#00ff88',
-  },
-  {
-    emoji: '📹',
-    name: 'Timeline',
-    desc: 'Upload photos and videos pinned to the exact match minute with GPS',
-    color: '#ff8800',
-  },
-  {
-    emoji: '🔮',
-    name: 'Studio',
-    desc: 'Orbit a live 3D pitch and edit match clips from any classic camera angle',
-    color: '#ff69b4',
-  },
-  {
-    emoji: '🛒',
-    name: 'Shop',
-    desc: 'FAIRPLAY gear printed and shipped worldwide on demand via Printful',
-    color: '#FFD700',
-  },
-];
+import { useT } from '../context/I18nContext';
 
 export default function WelcomeScreen({ onEnter }: { onEnter: () => void }) {
   const openAuthModal = useGameStore((s) => s.openAuthModal);
+  const t = useT();
+
+  const sport = t.sport;
+
+  const FEATURES = [
+    { emoji: '🏅', name: t.navReferee,  desc: t.featRefereeDesc, color: '#00d4ff' },
+    { emoji: '👥', name: t.navCompare,  desc: t.featCompareDesc,  color: '#aa88ff' },
+    { emoji: '🌍', name: t.navLeagues,  desc: t.featLeaguesDesc,  color: '#00ff88' },
+    { emoji: '📹', name: t.navTimeline, desc: t.featTimelineDesc, color: '#ff8800' },
+    { emoji: '🔮', name: t.navStudio,   desc: t.featStudioDesc,   color: '#ff69b4' },
+    { emoji: '🛒', name: t.navShop,     desc: t.featShopDesc,     color: '#FFD700' },
+  ];
 
   const handleSignUp = () => {
     onEnter();
     setTimeout(() => openAuthModal('register'), 300);
   };
+
+  const tagline = t.welcomeTagline.replace('{sport}', sport);
 
   return (
     <div
@@ -110,7 +83,7 @@ export default function WelcomeScreen({ onEnter }: { onEnter: () => void }) {
               letterSpacing: '0.08em',
             }}
           >
-            The {sport} referee app for everyone
+            {tagline}
           </div>
         </div>
 
@@ -173,7 +146,7 @@ export default function WelcomeScreen({ onEnter }: { onEnter: () => void }) {
             }}
             onClick={onEnter}
           >
-            ENTER APP
+            {t.enterApp}
           </button>
 
           <button
@@ -184,14 +157,14 @@ export default function WelcomeScreen({ onEnter }: { onEnter: () => void }) {
             }}
             onClick={handleSignUp}
           >
-            Sign up for a free account →
+            {t.signUpFree}
           </button>
 
           <p
             className="text-white/20 text-center"
             style={{ fontSize: 'clamp(9px, 1.2vw, 11px)', marginTop: 4 }}
           >
-            No account required · Works on any device · Free forever
+            {t.noAccount}
           </p>
         </div>
 

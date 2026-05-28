@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { SOCCER_CALLS } from '../data/soccerCalls';
+import { useT } from '../context/I18nContext';
 
 export default function ComparePanel() {
+  const t = useT();
   const allCalls = useGameStore((s) => s.allCalls);
   const voteCall = useGameStore((s) => s.voteCall);
   const currentGame = useGameStore((s) => s.currentGame);
@@ -65,7 +67,7 @@ export default function ComparePanel() {
             className={`nav-tab ${filter === f ? 'active' : ''}`}
             onClick={() => setFilter(f)}
           >
-            {f === 'official' ? '🏅 OFFICIAL' : f === 'fans' ? '👥 FANS' : '📋 ALL CALLS'}
+            {f === 'official' ? t.tabOfficial : f === 'fans' ? t.tabFans : t.tabAll}
           </button>
         ))}
         <div className="ml-auto flex items-center gap-2 self-center pr-1" style={{ fontSize: 'clamp(10px, 1.3vw, 13px)' }}>
@@ -75,7 +77,7 @@ export default function ComparePanel() {
               {isOnline ? '🌐' : '📴'}
             </span>
           )}
-          <span className="text-white/30">{filtered.length} call{filtered.length !== 1 ? 's' : ''}</span>
+          <span className="text-white/30">{filtered.length} {filtered.length !== 1 ? t.callsLabelPlural : t.callsLabel}</span>
         </div>
       </div>
 
@@ -84,7 +86,7 @@ export default function ComparePanel() {
         {filtered.length === 0 && (
           <div className="flex flex-col items-center justify-center h-48 text-white/30">
             <div className="mb-3" style={{ fontSize: 'clamp(32px, 5vw, 48px)' }}>⚽</div>
-            <div style={{ fontSize: 'clamp(12px, 1.6vw, 15px)' }}>No calls yet — be the first referee!</div>
+            <div style={{ fontSize: 'clamp(12px, 1.6vw, 15px)' }}>{t.beFirstRef}</div>
           </div>
         )}
         {[...filtered].reverse().map((call) => {
@@ -174,7 +176,7 @@ export default function ComparePanel() {
                     </span>
                   </div>
                   <div className="text-white/25 mt-0.5" style={{ fontSize: 'clamp(9px, 1.1vw, 12px)' }}>
-                    {total.toLocaleString()} fans voted
+                    {total.toLocaleString()} {t.fansVoted}
                   </div>
                 </div>
 

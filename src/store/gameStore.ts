@@ -148,6 +148,7 @@ interface GameStore {
   init: () => Promise<void>;
   setCurrentGame: (game: Game | null) => void;
   selectMatch: (match: LiveMatch) => void;
+  setCustomMatch: (homeTeam: string, awayTeam: string, leagueName?: string) => void;
   setSelectedCall: (call: SoccerCall | null) => void;
   showCardOverlay: (type: 'yellow' | 'red') => void;
   dismissCard: () => void;
@@ -251,6 +252,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   setCurrentGame: (game) => set({ currentGame: game }),
+
+  setCustomMatch: (homeTeam, awayTeam, leagueName = 'Custom') => {
+    const game: Game = {
+      id: `custom-${Date.now()}`,
+      homeTeam,
+      awayTeam,
+      homeScore: 0,
+      awayScore: 0,
+      minute: 0,
+      status: 'live',
+      leagueId: 'custom',
+      venueName: leagueName,
+      date: new Date().toISOString(),
+    };
+    set({ currentGame: game, allCalls: [], userCalls: [], clockFetchedAt: Date.now() });
+    subscribeToGameCalls(game.id, (row) => {
+      const call = rowToCall(row);
+      set((s) => {
+        if (s.allCalls.find((c) => c.id === call.id)) return s;
+        return { allCalls: [call, ...s.allCalls] };
+      });
+    });
+  },
+
   setSelectedCall: (call) => set({ selectedCall: call }),
   showCardOverlay: (type) => set({ cardType: type, showCard: true }),
   dismissCard: () => set({ showCard: false, cardType: null }),
