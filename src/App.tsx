@@ -5,15 +5,21 @@ import RefereePanel from './components/RefereePanel';
 import ComparePanel from './components/ComparePanel';
 import LeaguesPanel from './components/LeaguesPanel';
 import TimelinePanel from './components/TimelinePanel';
-import StudioPanel from './components/StudioPanel';
-import ShopPanel from './components/ShopPanel';
+import VisionPanel from './components/VisionPanel';
+import MarketPanel from './components/MarketPanel';
+import ImpactPanel from './components/ImpactPanel';
 import AuthModal from './components/AuthModal';
 import GameSelector from './components/GameSelector';
 import WelcomeScreen from './components/WelcomeScreen';
-import { useT } from './context/I18nContext';
+import WhistlePicker from './components/WhistlePicker';
+import LanguagePicker from './components/LanguagePicker';
+import FeedbackButton from './components/FeedbackButton';
+import { useT, useLang } from './context/I18nContext';
+import { WHISTLE_TYPES } from './lib/whistle';
 
 export default function App() {
   const t              = useT();
+  const { lang }       = useLang();
   const activeTab      = useGameStore((s) => s.activeTab);
   const setActiveTab   = useGameStore((s) => s.setActiveTab);
   const currentGame    = useGameStore((s) => s.currentGame);
@@ -21,17 +27,23 @@ export default function App() {
   const isLoading      = useGameStore((s) => s.isLoading);
   const userProfile    = useGameStore((s) => s.userProfile);
   const openAuthModal  = useGameStore((s) => s.openAuthModal);
+  const liveMatchCount = useGameStore((s) => s.liveMatchCount);
+  const whistleType    = useGameStore((s) => s.whistleType);
+  const setImpactGame  = useGameStore((s) => s.setImpactGame);
 
   const NAV_TABS = [
-    { id: 'referee'  as const, label: t.navReferee,  emoji: '🏅' },
-    { id: 'compare'  as const, label: t.navCompare,  emoji: '👥' },
-    { id: 'leagues'  as const, label: t.navLeagues,  emoji: '🌍' },
-    { id: 'timeline' as const, label: t.navTimeline, emoji: '📹' },
-    { id: 'studio'   as const, label: t.navStudio,   emoji: '🔮' },
-    { id: 'shop'     as const, label: t.navShop,     emoji: '🛒' },
+    { id: 'referee'  as const, label: t.navReferee,  emoji: '🏅', badge: null },
+    { id: 'compare'  as const, label: t.navCompare,  emoji: '👥', badge: null },
+    { id: 'leagues'  as const, label: t.navLeagues,  emoji: '🌍', badge: liveMatchCount > 0 ? liveMatchCount : null },
+    { id: 'timeline' as const, label: t.navTimeline, emoji: '📹', badge: null },
+    { id: 'vision'   as const, label: 'VISION',       emoji: '🔭', badge: null },
+    { id: 'market'   as const, label: 'MARKET',       emoji: '🏪', badge: null },
+    { id: 'impact'   as const, label: 'IMPACT',       emoji: '🌡️', badge: null },
   ];
 
-  const [showGameSelector, setShowGameSelector] = useState(false);
+  const [showGameSelector,  setShowGameSelector]  = useState(false);
+  const [showWhistlePicker, setShowWhistlePicker] = useState(false);
+  const [showLangPicker,    setShowLangPicker]    = useState(false);
   const [welcomed, setWelcomed] = useState(() => !!localStorage.getItem('fp_welcomed'));
 
   if (!welcomed) {
@@ -123,8 +135,63 @@ export default function App() {
           <span className="text-white/20 text-xs flex-shrink-0">▼</span>
         </button>
 
-        {/* Right side: sport name + auth */}
+        {/* Impact thermometer button — shown when a game is selected */}
+        {currentGame && (
+          <button
+            className="call-btn flex-shrink-0"
+            style={{ fontSize: 'clamp(12px,1.6vw,16px)', padding: '2px 5px', borderRadius: 6, background: 'rgba(255,100,0,0.12)', border: '1px solid rgba(255,100,0,0.25)' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setImpactGame({
+                id: currentGame.id,
+                homeTeam: currentGame.homeTeam,
+                awayTeam: currentGame.awayTeam,
+                league: currentGame.venueName ?? '',
+                leagueId: currentGame.leagueId ?? '',
+                status: currentGame.status,
+                minute: currentGame.minute,
+              });
+              setActiveTab('impact');
+            }}
+            title="View match impact"
+          >
+            🌡️
+          </button>
+        )}
+
+        {/* Right side: whistle selector + sport name + auth */}
         <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Language button */}
+          <button
+            className="call-btn flex items-center gap-1 px-2 py-1.5 rounded-lg font-black"
+            style={{
+              background: 'rgba(0,212,255,0.06)',
+              border: '1px solid rgba(0,212,255,0.18)',
+              color: 'rgba(0,212,255,0.8)',
+              fontSize: 'clamp(10px, 1.4vw, 13px)',
+              letterSpacing: '0.5px',
+            }}
+            title="Change language"
+            onClick={() => setShowLangPicker(true)}
+          >
+            🌐 <span className="font-black">{lang.toUpperCase()}</span>
+          </button>
+
+          {/* Whistle button */}
+          <button
+            className="call-btn flex items-center gap-1.5 px-2 py-1.5 rounded-lg font-bold"
+            style={{
+              background: 'rgba(255,200,0,0.08)',
+              border: '1px solid rgba(255,200,0,0.2)',
+              color: 'rgba(255,200,0,0.85)',
+              fontSize: 'clamp(14px, 2vw, 18px)',
+            }}
+            title={t.whistlePickerTitle ?? 'Whistle Sounds'}
+            onClick={() => setShowWhistlePicker(true)}
+          >
+            {WHISTLE_TYPES.find((w) => w.id === whistleType)?.emoji ?? '📯'}
+          </button>
+
           <div
             className="font-bold px-2 py-1 rounded hidden md:block"
             style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)', color: '#00d4ff', fontSize: 'clamp(9px, 1.3vw, 13px)' }}
@@ -151,14 +218,33 @@ export default function App() {
         </div>
       </header>
 
+      {/* ── Live games notification banner ─────────────────────────────── */}
+      {liveMatchCount > 0 && !currentGame && (
+        <button
+          className="call-btn flex items-center gap-2 justify-center py-1.5 w-full"
+          style={{
+            background: 'linear-gradient(90deg, rgba(255,68,68,0.12), rgba(255,68,68,0.06))',
+            borderBottom: '1px solid rgba(255,68,68,0.2)',
+            flexShrink: 0,
+          }}
+          onClick={() => setActiveTab('leagues')}
+        >
+          <div className="rounded-full" style={{ width: 7, height: 7, background: '#ff4444', boxShadow: '0 0 6px #ff4444', animation: 'pulse 1s infinite', flexShrink: 0 }} />
+          <span className="font-black text-white/80" style={{ fontSize: 'clamp(10px, 1.4vw, 13px)', letterSpacing: '0.5px' }}>
+            {liveMatchCount} LIVE {liveMatchCount === 1 ? 'MATCH' : 'MATCHES'} — tap to join →
+          </span>
+        </button>
+      )}
+
       {/* ── Main content ───────────────────────────────────────────────── */}
       <main className="flex-1 overflow-hidden">
         {activeTab === 'referee'  && <RefereePanel />}
         {activeTab === 'compare'  && <ComparePanel />}
         {activeTab === 'leagues'  && <LeaguesPanel />}
         {activeTab === 'timeline' && <TimelinePanel />}
-        {activeTab === 'studio'   && <StudioPanel />}
-        {activeTab === 'shop'     && <ShopPanel />}
+        {activeTab === 'vision'   && <VisionPanel />}
+        {activeTab === 'market'   && <MarketPanel />}
+        {activeTab === 'impact'   && <ImpactPanel />}
       </main>
 
       {/* ── Bottom nav ─────────────────────────────────────────────────── */}
@@ -181,9 +267,28 @@ export default function App() {
               className="call-btn flex flex-col items-center gap-1 flex-1 py-2 relative"
               onClick={() => setActiveTab(tab.id)}
             >
-              <span style={{ fontSize: 'clamp(17px, 2.8vw, 26px)', filter: isActive ? 'none' : 'grayscale(0.8) opacity(0.5)' }}>
-                {tab.emoji}
-              </span>
+              <div className="relative">
+                <span style={{ fontSize: 'clamp(17px, 2.8vw, 26px)', filter: isActive ? 'none' : 'grayscale(0.8) opacity(0.5)' }}>
+                  {tab.emoji}
+                </span>
+                {tab.badge !== null && (
+                  <div
+                    className="absolute flex items-center justify-center font-black pulse-glow"
+                    style={{
+                      top: -4, right: -6,
+                      minWidth: 'clamp(14px, 2vw, 18px)', height: 'clamp(14px, 2vw, 18px)',
+                      borderRadius: 99,
+                      background: '#ff4444',
+                      color: '#fff',
+                      fontSize: 'clamp(7px, 1vw, 10px)',
+                      padding: '0 3px',
+                      boxShadow: '0 0 8px rgba(255,68,68,0.6)',
+                    }}
+                  >
+                    {tab.badge > 99 ? '99+' : tab.badge}
+                  </div>
+                )}
+              </div>
               <span
                 className="font-bold"
                 style={{ fontSize: 'clamp(7px, 1vw, 11px)', letterSpacing: '0.5px', color: isActive ? '#00d4ff' : 'rgba(255,255,255,0.3)' }}
@@ -201,10 +306,15 @@ export default function App() {
         })}
       </nav>
 
+      {/* ── Floating feedback button ───────────────────────────────────── */}
+      <FeedbackButton />
+
       {/* ── Overlays ───────────────────────────────────────────────────── */}
       <CardOverlay />
       <AuthModal />
-      {showGameSelector && <GameSelector onClose={() => setShowGameSelector(false)} />}
+      {showGameSelector    && <GameSelector    onClose={() => setShowGameSelector(false)} />}
+      {showWhistlePicker   && <WhistlePicker   onClose={() => setShowWhistlePicker(false)} />}
+      {showLangPicker      && <LanguagePicker  onClose={() => setShowLangPicker(false)} />}
     </div>
   );
 }

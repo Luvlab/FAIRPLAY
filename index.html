@@ -2,14 +2,36 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+
+    <!-- PWA / Web App -->
+    <meta name="application-name" content="FAIRPLAY" />
+    <meta name="theme-color" content="#0d1117" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Apple / iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="theme-color" content="#0d1117" />
+    <meta name="apple-mobile-web-app-title" content="FAIRPLAY" />
+    <link rel="apple-touch-icon" href="/pwa-icon.svg" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/pwa-icon.svg" />
+
+    <!-- SEO / Open Graph -->
+    <meta name="description" content="The soccer referee app for everyone — call fouls, compare with fans, follow every league in real time." />
+    <meta property="og:title" content="FAIRPLAY — Referee Engine" />
+    <meta property="og:description" content="Call fouls, cards & restarts on any live match. Compare with fans worldwide." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
+
     <title>FAIRPLAY — Referee Engine</title>
+
     <style>
       * { touch-action: pan-x pan-y; }
+      /* Prevent FOUC — match app background */
+      body { background: #0d1117; }
     </style>
   </head>
   <body>

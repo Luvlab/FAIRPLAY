@@ -2,16 +2,18 @@ import { useEffect, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
 
 export default function CardOverlay() {
-  const showCard    = useGameStore((s) => s.showCard);
-  const cardType    = useGameStore((s) => s.cardType);
-  const dismissCard = useGameStore((s) => s.dismissCard);
-  const setActiveTab = useGameStore((s) => s.setActiveTab);
+  const showCard         = useGameStore((s) => s.showCard);
+  const cardType         = useGameStore((s) => s.cardType);
+  const dismissCard      = useGameStore((s) => s.dismissCard);
+  const setActiveTab     = useGameStore((s) => s.setActiveTab);
+  const setCompareFilter = useGameStore((s) => s.setCompareFilter);
 
   const tapCount = useRef(0);
   const tapTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const dismiss = () => {
     dismissCard();
+    setCompareFilter('mine');
     setActiveTab('compare');
   };
 
@@ -41,7 +43,7 @@ export default function CardOverlay() {
       style={{
         width: '100vw',
         height: '100vh',
-        background: cardType === 'yellow' ? '#FFD700' : '#DC143C',
+        background: cardType === 'yellow' ? '#FFD700' : '#FF0000',
         animation: 'cardFlash 0.15s ease-out',
       }}
       onClick={handleTap}

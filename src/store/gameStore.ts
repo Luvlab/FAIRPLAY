@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { SoccerCall } from '../data/soccerCalls';
+import { getSavedWhistleId, saveWhistleId } from '../lib/whistle';
 import {
   supabase,
   signInAnon,
@@ -105,21 +106,7 @@ export function computeLiveMinute(baseMinute: number, fetchedAt: number, status?
   return baseMinute;
 }
 
-// Fallback game shown before user picks a real one
-const DEMO_GAME_ID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
-const DEMO_GAME: Game = {
-  id: DEMO_GAME_ID,
-  homeTeam: 'Arsenal',
-  awayTeam: 'Chelsea',
-  homeScore: 2,
-  awayScore: 1,
-  minute: 67,
-  status: 'live',
-  leagueId: 'eng.1',
-  venueName: 'Emirates Stadium',
-  venueLocation: { lat: 51.5549, lng: -0.1084 },
-  date: new Date().toISOString(),
-};
+// No mock game — users start with null and pick a real match or create one
 
 interface GameStore {
   // Game
@@ -130,16 +117,36 @@ interface GameStore {
   selectedCall: SoccerCall | null;
   cardType: 'yellow' | 'red' | null;
   showCard: boolean;
-  activeTab: 'referee' | 'compare' | 'leagues' | 'timeline' | 'studio' | 'shop';
+  activeTab: 'referee' | 'compare' | 'leagues' | 'timeline' | 'vision' | 'market' | 'impact';
+  compareFilter: 'all' | 'official' | 'fans' | 'mine';
   mediaItems: MediaItem[];
   userCalls: RefereeCall[];
   allCalls: RefereeCall[];
   activeCategory: string;
   localLeagues: LocalLeague[];
+  // Live matches notification
+  liveMatchCount: number;
+  // Custom match timer
+  matchTimerPaused: boolean;
+  matchTimerFrozenMinute: number;
+  // Whistle
+  whistleType: string;
+  setWhistleType: (id: string) => void;
   // Auth
   userId: string | null;
   userProfile: UserProfile | null;
   authModal: 'hidden' | 'login' | 'register';
+  // Impact Thermometer
+  impactGame: {
+    id: string;
+    homeTeam: string;
+    awayTeam: string;
+    league: string;
+    leagueId: string;
+    status: string;
+    minute?: number;
+  } | null;
+
   // Network
   isOnline: boolean;
   isLoading: boolean;
@@ -153,7 +160,12 @@ interface GameStore {
   showCardOverlay: (type: 'yellow' | 'red') => void;
   dismissCard: () => void;
   setActiveTab: (tab: GameStore['activeTab']) => void;
+  setCompareFilter: (f: GameStore['compareFilter']) => void;
   addMedia: (item: MediaItem) => void;
+  /** Remove a call locally (soft-deleted; stays in DB for other users) */
+  deleteCall: (id: string) => void;
+  /** Update call type and optional player name locally */
+  updateCallData: (id: string, callId: string, callName: string, playerName?: string) => void;
   uploadAndAddMedia: (file: File, minute: number, caption: string, location: { lat: number; lng: number } | null) => Promise<void>;
   makeCall: (call: RefereeCall) => void;
   submitLiveCall: (callId: string, callName: string, minute: number, location?: { lat: number; lng: number }, playerName?: string) => Promise<void>;
@@ -161,6 +173,12 @@ interface GameStore {
   setActiveCategory: (cat: string) => void;
   addLocalLeague: (league: Omit<LocalLeague, 'id'>) => Promise<void>;
   loadLocalLeagues: () => Promise<void>;
+  // Custom match timer
+  pauseMatchTimer: () => void;
+  resumeMatchTimer: () => void;
+  addMatchMinutes: (mins: number) => void;
+  endCustomMatch: () => void;
+  setImpactGame: (game: { id: string; homeTeam: string; awayTeam: string; league: string; leagueId: string; status: string; minute?: number } | null) => void;
   // Auth actions
   openAuthModal: (mode: 'login' | 'register') => void;
   closeAuthModal: () => void;
@@ -170,17 +188,23 @@ interface GameStore {
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
-  currentGame: DEMO_GAME,
+  currentGame: null,
   clockFetchedAt: Date.now(),
+  whistleType: getSavedWhistleId(),
   selectedCall: null,
   cardType: null,
   showCard: false,
   activeTab: 'referee',
+  compareFilter: 'all',
   mediaItems: [],
   userCalls: [],
   allCalls: [],
   activeCategory: 'all',
   localLeagues: [],
+  liveMatchCount: 0,
+  matchTimerPaused: false,
+  matchTimerFrozenMinute: 0,
+  impactGame: null,
   userId: null,
   userProfile: null,
   authModal: 'hidden',
@@ -208,31 +232,34 @@ export const useGameStore = create<GameStore>((set, get) => ({
       } else if (session?.user?.is_anonymous) {
         set({ userId: session.user.id, isOnline: true });
       } else {
-        // Fresh anon session
         const user = await signInAnon();
         if (user) set({ userId: user.id, isOnline: true });
       }
     }
 
-    // 2. Fetch calls for the current game
-    const gameId = get().currentGame?.id ?? DEMO_GAME_ID;
-    const rows = await getGameCalls(gameId);
-    if (rows.length > 0) set({ allCalls: rows.map(rowToCall) });
+    // 2. No default game — fetch live count from top leagues for notification badge
+    const { fetchAllMatches } = await import('../lib/footballApi');
+    fetchAllMatches().then((matches) => {
+      const liveCount = matches.filter((m) => m.status === 'live' || m.status === 'ht').length;
+      set({ liveMatchCount: liveCount });
+    }).catch(() => {});
 
-    // 3. Realtime subscription
+    // 3. Auth + local leagues
     const { userId: uid } = get();
     if (uid) {
-      subscribeToGameCalls(gameId, (row) => {
-        const call = rowToCall(row);
-        set((s) => {
-          if (s.allCalls.find((c) => c.id === call.id)) return s;
-          return { allCalls: [call, ...s.allCalls] };
-        });
-      });
       await get().loadLocalLeagues();
     }
 
     set({ isLoading: false });
+
+    // 4. Refresh live count every 5 minutes
+    setInterval(async () => {
+      const { fetchAllMatches: fetchFn } = await import('../lib/footballApi');
+      fetchFn().then((matches) => {
+        const liveCount = matches.filter((m) => m.status === 'live' || m.status === 'ht').length;
+        set({ liveMatchCount: liveCount });
+      }).catch(() => {});
+    }, 5 * 60 * 1000);
   },
 
   selectMatch: (match) => {
@@ -285,7 +312,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   uploadAndAddMedia: async (file, minute, caption, location) => {
     const { userId, currentGame } = get();
     const uid = userId ?? 'anon';
-    const gameId = currentGame?.id ?? DEMO_GAME_ID;
+    const gameId = currentGame?.id ?? 'no-game';
 
     const localUrl = URL.createObjectURL(file);
     const localItem: MediaItem = {
@@ -319,7 +346,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (currentGame && !isGameLive(currentGame.status)) return;
 
     const uid = userId ?? `fan-${Math.random().toString(36).slice(2, 8)}`;
-    const gameId = currentGame?.id ?? DEMO_GAME_ID;
+    const gameId = currentGame?.id ?? 'no-game';
     const displayName = userProfile?.displayName ?? 'Fan';
     const optId = `opt-${Date.now()}`;
 
@@ -353,6 +380,48 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   setActiveCategory: (cat) => set({ activeCategory: cat }),
 
+  setWhistleType: (id) => {
+    saveWhistleId(id);
+    set({ whistleType: id });
+  },
+
+  setCompareFilter: (f) => set({ compareFilter: f }),
+
+  deleteCall: (id) => set((s) => ({
+    allCalls: s.allCalls.filter((c) => c.id !== id),
+    userCalls: s.userCalls.filter((c) => c.id !== id),
+  })),
+
+  updateCallData: (id, callId, callName, playerName) => set((s) => ({
+    allCalls: s.allCalls.map((c) => c.id === id ? { ...c, callId, callName, playerName: playerName ?? c.playerName } : c),
+    userCalls: s.userCalls.map((c) => c.id === id ? { ...c, callId, callName, playerName: playerName ?? c.playerName } : c),
+  })),
+
+  pauseMatchTimer: () => {
+    const { currentGame, clockFetchedAt } = get();
+    if (!currentGame) return;
+    const frozenMinute = Math.min(120, currentGame.minute + Math.floor((Date.now() - clockFetchedAt) / 60_000));
+    set({ matchTimerPaused: true, matchTimerFrozenMinute: frozenMinute });
+  },
+
+  resumeMatchTimer: () => {
+    const { matchTimerFrozenMinute, currentGame } = get();
+    if (!currentGame) return;
+    // Adjust clockFetchedAt so that elapsed time resumes from frozen minute
+    const newFetchedAt = Date.now() - (matchTimerFrozenMinute - currentGame.minute) * 60_000;
+    set({ matchTimerPaused: false, clockFetchedAt: newFetchedAt });
+  },
+
+  addMatchMinutes: (mins) => {
+    // Shift clockFetchedAt back by mins*60s — makes computeLiveMinute return a larger value (NO whistle)
+    set((s) => ({ clockFetchedAt: s.clockFetchedAt - mins * 60_000 }));
+  },
+
+  endCustomMatch: () => set((s) => ({
+    currentGame: s.currentGame ? { ...s.currentGame, status: 'ft' } : null,
+    matchTimerPaused: false,
+  })),
+
   addLocalLeague: async (league) => {
     const { userId } = get();
     const local: LocalLeague = { id: `local-${Date.now()}`, ...league };
@@ -370,6 +439,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     set({ localLeagues: rows.map((r: any) => ({ id: r.id, name: r.name, country: r.country, ageGroup: r.age_group, teams: r.teams ?? [] })) });
   },
+
+  // ── Impact ────────────────────────────────────────────────────────────────
+
+  setImpactGame: (game) => set({ impactGame: game }),
 
   // ── Auth ──────────────────────────────────────────────────────────────────
 

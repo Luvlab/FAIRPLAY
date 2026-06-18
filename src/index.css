@@ -3,7 +3,7 @@
 :root {
   --pitch-green: #2d6a2d;
   --card-yellow: #FFD700;
-  --card-red: #DC143C;
+  --card-red: #FF0000;
   --fp-dark: #0d1117;
   --fp-accent: #00d4ff;
   --fp-panel: rgba(255,255,255,0.05);
@@ -39,7 +39,7 @@ html, body, #root {
   50% { opacity: 0.3; }
 }
 .yellow-flash { animation: screenFlash 0.4s ease; background: rgba(255,215,0,0.5) !important; }
-.red-flash { animation: screenFlash 0.4s ease; background: rgba(220,20,60,0.5) !important; }
+.red-flash { animation: screenFlash 0.4s ease; background: rgba(255,0,0,0.5) !important; }
 
 .call-btn {
   touch-action: manipulation;
@@ -116,6 +116,11 @@ html, body, #root {
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
 
 @keyframes welcomeFadeIn {
   0%   { opacity: 0; }

@@ -21,8 +21,10 @@ function formatDate(iso: string) {
 }
 
 export default function GameSelector({ onClose }: { onClose: () => void }) {
-  const selectMatch = useGameStore((s) => s.selectMatch);
-  const currentGame = useGameStore((s) => s.currentGame);
+  const selectMatch   = useGameStore((s) => s.selectMatch);
+  const currentGame   = useGameStore((s) => s.currentGame);
+  const setImpactGame = useGameStore((s) => s.setImpactGame);
+  const setActiveTab  = useGameStore((s) => s.setActiveTab);
 
   const [matches, setMatches] = useState<LiveMatch[]>([]);
   const [loading, setLoading] = useState(true);
@@ -124,50 +126,86 @@ export default function GameSelector({ onClose }: { onClose: () => void }) {
           const st = STATUS_LABEL[m.status] ?? STATUS_LABEL.ft;
           const isSelected = currentGame?.id === m.id;
           return (
-            <button
+            <div
               key={m.id}
-              className="w-full call-btn rounded-xl p-3 text-left"
+              className="rounded-xl"
               style={{
                 background: isSelected ? 'rgba(0,212,255,0.1)' : 'rgba(255,255,255,0.04)',
                 border: isSelected ? '1px solid rgba(0,212,255,0.4)' : '1px solid rgba(255,255,255,0.07)',
+                display: 'flex',
+                alignItems: 'stretch',
+                overflow: 'hidden',
               }}
-              onClick={() => { selectMatch(m); onClose(); }}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm">{m.leagueFlag}</span>
-                <span className="text-white/40 text-xs font-bold">{m.leagueName}</span>
-                <span
-                  className="ml-auto font-black text-xs px-2 py-0.5 rounded-full"
-                  style={{ background: `${st.color}22`, color: st.color, border: `1px solid ${st.color}44` }}
-                >
-                  {m.status === 'live' || m.status === 'ht'
-                    ? m.status === 'ht' ? 'HT' : `${m.displayClock || m.minute + "'"}`
-                    : m.status === 'pre' ? formatDate(m.date) : 'FT'}
-                </span>
-              </div>
+              {/* Main match row — select & close */}
+              <button
+                className="flex-1 call-btn p-3 text-left"
+                onClick={() => { selectMatch(m); onClose(); }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm">{m.leagueFlag}</span>
+                  <span className="text-white/40 text-xs font-bold">{m.leagueName}</span>
+                  <span
+                    className="ml-auto font-black text-xs px-2 py-0.5 rounded-full"
+                    style={{ background: `${st.color}22`, color: st.color, border: `1px solid ${st.color}44` }}
+                  >
+                    {m.status === 'live' || m.status === 'ht'
+                      ? m.status === 'ht' ? 'HT' : `${m.displayClock || m.minute + "'"}`
+                      : m.status === 'pre' ? formatDate(m.date) : 'FT'}
+                  </span>
+                </div>
 
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex-1 text-right">
-                  <div className="font-bold text-sm truncate">{m.homeTeam}</div>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex-1 text-right">
+                    <div className="font-bold text-sm truncate">{m.homeTeam}</div>
+                  </div>
+                  <div className="flex-shrink-0 text-center min-w-[60px]">
+                    {m.status === 'pre' ? (
+                      <span className="text-white/40 text-sm font-bold">vs</span>
+                    ) : (
+                      <span className="font-black text-lg" style={{ color: m.status === 'live' ? '#00d4ff' : 'white' }}>
+                        {m.homeScore} — {m.awayScore}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <div className="font-bold text-sm truncate">{m.awayTeam}</div>
+                  </div>
                 </div>
-                <div className="flex-shrink-0 text-center min-w-[60px]">
-                  {m.status === 'pre' ? (
-                    <span className="text-white/40 text-sm font-bold">vs</span>
-                  ) : (
-                    <span className="font-black text-lg" style={{ color: m.status === 'live' ? '#00d4ff' : 'white' }}>
-                      {m.homeScore} — {m.awayScore}
-                    </span>
-                  )}
-                </div>
-                <div className="flex-1 text-left">
-                  <div className="font-bold text-sm truncate">{m.awayTeam}</div>
-                </div>
-              </div>
 
-              {m.venue && (
-                <div className="text-white/25 text-xs mt-1.5 truncate">📍 {m.venue}</div>
-              )}
-            </button>
+                {m.venue && (
+                  <div className="text-white/25 text-xs mt-1.5 truncate">📍 {m.venue}</div>
+                )}
+              </button>
+
+              {/* Thermometer button */}
+              <button
+                className="call-btn flex-shrink-0 flex items-center justify-center"
+                style={{
+                  background: 'rgba(255,100,0,0.08)',
+                  borderLeft: '1px solid rgba(255,100,0,0.15)',
+                  color: 'rgba(255,100,0,0.8)',
+                  padding: '0 10px',
+                  fontSize: 'clamp(14px,2vw,18px)',
+                }}
+                title="View match impact"
+                onClick={() => {
+                  setImpactGame({
+                    id: m.id,
+                    homeTeam: m.homeTeam,
+                    awayTeam: m.awayTeam,
+                    league: m.leagueName ?? '',
+                    leagueId: m.leagueId ?? '',
+                    status: m.status,
+                    minute: m.minute,
+                  });
+                  setActiveTab('impact');
+                  onClose();
+                }}
+              >
+                🌡️
+              </button>
+            </div>
           );
         })}
       </div>

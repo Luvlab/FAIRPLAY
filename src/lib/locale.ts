@@ -91,7 +91,15 @@ export async function detectLocale(): Promise<string> {
   return lang;
 }
 
-/** Synchronously read whatever's already cached (for immediate first render) */
+/** Synchronously read whatever's already cached (for immediate first render).
+ *  Defaults to French until geo detection resolves. */
 export function getCachedLocale(): string {
-  return localStorage.getItem(STORAGE_KEY) ?? navLang();
+  return localStorage.getItem(STORAGE_KEY) ?? 'fr';
+}
+
+/** Clear the cache and force a fresh IP geo-detection round-trip.
+ *  Call this when the user taps "Auto-detect language". */
+export async function resetAndDetectLocale(): Promise<string> {
+  localStorage.removeItem(STORAGE_KEY);
+  return detectLocale();
 }

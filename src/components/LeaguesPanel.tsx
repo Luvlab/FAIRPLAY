@@ -2,9 +2,21 @@ import { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { useT } from '../context/I18nContext';
 import { LEAGUES, fetchLeagueMatches, type LiveMatch } from '../lib/footballApi';
+import WorldCupSection from './WorldCupSection';
 
 // ── Types ──────────────────────────────────────────────────────────────────
-type MainView = 'world' | 'local' | 'add' | 'match';
+type MainView = 'world' | 'local' | 'add' | 'match' | 'club';
+
+interface ClubMatch {
+  id: string;
+  date: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeScore: number;
+  awayScore: number;
+  notes: string;
+  callCount: number;
+}
 
 interface LeagueInfo {
   id: string;
@@ -35,10 +47,12 @@ function statusStyle(status: LiveMatch['status']) {
 function MatchCard({
   match,
   onReferee,
+  onImpact,
   refereeLabel,
 }: {
   match: LiveMatch;
   onReferee: (m: LiveMatch) => void;
+  onImpact: (m: LiveMatch) => void;
   refereeLabel: string;
 }) {
   const s = statusStyle(match.status);
@@ -124,6 +138,23 @@ function MatchCard({
       >
         {refereeLabel}
       </button>
+
+      {/* Impact thermometer button */}
+      <button
+        className="call-btn flex-shrink-0"
+        style={{
+          background: 'rgba(255,100,0,0.1)',
+          border: '1px solid rgba(255,100,0,0.2)',
+          color: 'rgba(255,100,0,0.8)',
+          borderRadius: 6,
+          padding: '2px 6px',
+          fontSize: 'clamp(10px,1.2vw,12px)',
+        }}
+        title="View match impact"
+        onClick={(e) => { e.stopPropagation(); onImpact(match); }}
+      >
+        🌡️
+      </button>
     </div>
   );
 }
@@ -133,11 +164,13 @@ function LeagueDetail({
   league,
   onBack,
   onReferee,
+  onImpact,
   t,
 }: {
   league: LeagueInfo;
   onBack: () => void;
   onReferee: (m: LiveMatch) => void;
+  onImpact: (m: LiveMatch) => void;
   t: ReturnType<typeof useT>;
 }) {
   const [matches, setMatches] = useState<LiveMatch[]>([]);
@@ -223,6 +256,7 @@ function LeagueDetail({
             key={m.id}
             match={m}
             onReferee={onReferee}
+            onImpact={onImpact}
             refereeLabel={t.refereeThis}
           />
         ))}
@@ -239,6 +273,7 @@ export default function LeaguesPanel() {
   const selectMatch    = useGameStore((s) => s.selectMatch);
   const setCustomMatch = useGameStore((s) => s.setCustomMatch);
   const setActiveTab   = useGameStore((s) => s.setActiveTab);
+  const setImpactGame  = useGameStore((s) => s.setImpactGame);
 
   const [view, setView]               = useState<MainView>('world');
   const [selectedLeague, setSelected] = useState<LeagueInfo | null>(null);
@@ -252,6 +287,20 @@ export default function LeaguesPanel() {
   const [customHome, setCustomHome]   = useState('');
   const [customAway, setCustomAway]   = useState('');
   const [customLeague, setCustomLeague] = useState('');
+
+  // Club Manager state
+  const [clubLeague, setClubLeague] = useState<typeof localLeagues[0] | null>(null);
+  const [clubMatches, setClubMatches] = useState<ClubMatch[]>([]);
+  const [showAddMatch, setShowAddMatch] = useState(false);
+  const [newMatch, setNewMatch] = useState({
+    date: new Date().toISOString().slice(0, 10),
+    homeTeam: '',
+    awayTeam: '',
+    homeScore: '0',
+    awayScore: '0',
+    notes: '',
+  });
+  const [copiedInvite, setCopiedInvite] = useState(false);
 
   // ── World league list ────────────────────────────────────────────────
   const filteredLeagues = LEAGUES.filter((l) => {
@@ -268,6 +317,19 @@ export default function LeaguesPanel() {
   const handleReferee = (match: LiveMatch) => {
     selectMatch(match);
     setActiveTab('referee');
+  };
+
+  const handleImpact = (match: LiveMatch) => {
+    setImpactGame({
+      id: match.id,
+      homeTeam: match.homeTeam,
+      awayTeam: match.awayTeam,
+      league: match.leagueName ?? '',
+      leagueId: match.leagueId ?? '',
+      status: match.status,
+      minute: match.minute,
+    });
+    setActiveTab('impact');
   };
 
   const handleAddLeague = () => {
@@ -288,6 +350,63 @@ export default function LeaguesPanel() {
     setActiveTab('referee');
   };
 
+  const openClubManager = (league: typeof localLeagues[0]) => {
+    setClubLeague(league);
+    const stored = localStorage.getItem(`fp_club_matches_${league.id}`);
+    setClubMatches(stored ? (JSON.parse(stored) as ClubMatch[]) : []);
+    setShowAddMatch(false);
+    setNewMatch({
+      date: new Date().toISOString().slice(0, 10),
+      homeTeam: league.teams[0] ?? '',
+      awayTeam: '',
+      homeScore: '0',
+      awayScore: '0',
+      notes: '',
+    });
+    setView('club');
+  };
+
+  const handleAddClubMatch = () => {
+    if (!clubLeague || !newMatch.homeTeam.trim() || !newMatch.awayTeam.trim()) return;
+    const match: ClubMatch = {
+      id: `cm-${Date.now()}`,
+      date: newMatch.date,
+      homeTeam: newMatch.homeTeam.trim(),
+      awayTeam: newMatch.awayTeam.trim(),
+      homeScore: parseInt(newMatch.homeScore) || 0,
+      awayScore: parseInt(newMatch.awayScore) || 0,
+      notes: newMatch.notes.trim(),
+      callCount: 0,
+    };
+    const updated = [match, ...clubMatches];
+    setClubMatches(updated);
+    localStorage.setItem(`fp_club_matches_${clubLeague.id}`, JSON.stringify(updated));
+    setShowAddMatch(false);
+    setNewMatch({
+      date: new Date().toISOString().slice(0, 10),
+      homeTeam: clubLeague.teams[0] ?? '',
+      awayTeam: '',
+      homeScore: '0',
+      awayScore: '0',
+      notes: '',
+    });
+  };
+
+  const handleClubReferee = () => {
+    if (!clubLeague) return;
+    const home = clubLeague.teams[0] ?? clubLeague.name;
+    setCustomMatch(home, 'Opponent', clubLeague.name);
+    setActiveTab('referee');
+  };
+
+  const handleCopyInvite = (leagueId: string) => {
+    const link = `https://fairplay.app/join/${leagueId}`;
+    navigator.clipboard.writeText(link).then(() => {
+      setCopiedInvite(true);
+      setTimeout(() => setCopiedInvite(false), 2000);
+    }).catch(() => {});
+  };
+
   // ── League detail overlay ─────────────────────────────────────────────
   if (selectedLeague) {
     return (
@@ -295,6 +414,7 @@ export default function LeaguesPanel() {
         league={selectedLeague}
         onBack={() => setSelected(null)}
         onReferee={handleReferee}
+        onImpact={handleImpact}
         t={t}
       />
     );
@@ -329,11 +449,19 @@ export default function LeaguesPanel() {
           <button
             key={v}
             className={`nav-tab flex-shrink-0 ${view === v ? 'active' : ''}`}
-            onClick={() => setView(v)}
+            onClick={() => setView(v as MainView)}
           >
             {label}
           </button>
         ))}
+        {view === 'club' && clubLeague && (
+          <button
+            className="nav-tab flex-shrink-0 active"
+            style={{ background: 'rgba(255,200,0,0.15)', border: '1px solid rgba(255,200,0,0.35)', color: '#ffc800' }}
+          >
+            ⚽ {clubLeague.name}
+          </button>
+        )}
       </div>
 
       {/* ── WORLD tab ─────────────────────────────────────────────────── */}
@@ -362,7 +490,13 @@ export default function LeaguesPanel() {
           </div>
 
           <div className="flex-1 scrollable px-3 md:px-4 space-y-1.5 md:space-y-2 pb-4">
-            {filteredLeagues.map((league) => (
+            {/* World Cup 2026 — pinned above the regular league list */}
+            <WorldCupSection
+              onSelectMatch={(match) => { selectMatch(match); }}
+              onImpact={handleImpact}
+            />
+
+            {filteredLeagues.filter((l) => l.id !== 'fifa.world').map((league) => (
               <button
                 key={league.id}
                 className="w-full call-btn flex items-center gap-3 p-3 md:p-4 rounded-xl text-left"
@@ -425,17 +559,26 @@ export default function LeaguesPanel() {
                 </div>
               )}
 
-              {/* Create match in this league */}
-              <button
-                className="call-btn mt-3 w-full py-2 rounded-lg font-bold"
-                style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)', color: '#00d4ff', fontSize: 'clamp(10px, 1.3vw, 13px)' }}
-                onClick={() => {
-                  setCustomLeague(l.name);
-                  setView('match');
-                }}
-              >
-                ⚽ {t.tabSingleMatch}
-              </button>
+              {/* Actions row */}
+              <div className="flex gap-2 mt-3">
+                <button
+                  className="call-btn flex-1 py-2 rounded-lg font-bold"
+                  style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)', color: '#00d4ff', fontSize: 'clamp(10px, 1.3vw, 13px)' }}
+                  onClick={() => {
+                    setCustomLeague(l.name);
+                    setView('match');
+                  }}
+                >
+                  ⚽ {t.tabSingleMatch}
+                </button>
+                <button
+                  className="call-btn flex-1 py-2 rounded-lg font-bold"
+                  style={{ background: 'rgba(255,200,0,0.1)', border: '1px solid rgba(255,200,0,0.25)', color: '#ffc800', fontSize: 'clamp(10px, 1.3vw, 13px)' }}
+                  onClick={() => openClubManager(l)}
+                >
+                  ⚽ Manage Club
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -506,6 +649,225 @@ export default function LeaguesPanel() {
               {t.createLeagueBtn}
             </button>
           </div>
+        </div>
+      )}
+
+      {/* ── CLUB MANAGER tab ──────────────────────────────────────── */}
+      {view === 'club' && clubLeague && (
+        <div className="flex-1 scrollable px-3 py-3 md:py-4 space-y-3">
+          {/* Club header */}
+          <div
+            className="rounded-xl p-3 md:p-4 flex items-center gap-3"
+            style={{ background: 'rgba(255,200,0,0.07)', border: '1px solid rgba(255,200,0,0.2)' }}
+          >
+            <div style={{ fontSize: 'clamp(28px, 4.5vw, 40px)' }}>⚽</div>
+            <div className="flex-1 min-w-0">
+              <div className="font-black truncate" style={{ color: '#ffc800', fontSize: 'clamp(13px, 2vw, 18px)' }}>
+                {clubLeague.name}
+              </div>
+              <div className="text-white/40" style={{ fontSize: 'clamp(10px, 1.3vw, 12px)' }}>
+                {clubLeague.country} · {clubLeague.ageGroup}
+              </div>
+            </div>
+            <button
+              className="call-btn px-3 py-1.5 rounded-lg font-bold"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', fontSize: 'clamp(10px, 1.3vw, 13px)' }}
+              onClick={() => setView('local')}
+            >
+              ← Back
+            </button>
+          </div>
+
+          {/* Invite panel */}
+          <div
+            className="rounded-xl p-3 md:p-4"
+            style={{ background: 'rgba(0,212,255,0.05)', border: '1px solid rgba(0,212,255,0.15)' }}
+          >
+            <div className="font-bold mb-2" style={{ color: '#00d4ff', fontSize: 'clamp(10px, 1.3vw, 13px)', letterSpacing: '0.5px' }}>
+              👥 INVITE SUPPORTERS AS RECORDERS
+            </div>
+            <div className="flex items-center gap-2">
+              <div
+                className="flex-1 rounded-lg px-3 py-2 truncate font-mono"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 'clamp(9px, 1.2vw, 12px)', color: 'rgba(255,255,255,0.6)' }}
+              >
+                https://fairplay.app/join/{clubLeague.id}
+              </div>
+              <button
+                className="call-btn px-3 py-2 rounded-lg font-bold flex-shrink-0"
+                style={{
+                  background: copiedInvite ? 'rgba(0,255,136,0.15)' : 'rgba(0,212,255,0.15)',
+                  border: `1px solid ${copiedInvite ? 'rgba(0,255,136,0.35)' : 'rgba(0,212,255,0.35)'}`,
+                  color: copiedInvite ? '#00ff88' : '#00d4ff',
+                  fontSize: 'clamp(10px, 1.3vw, 13px)',
+                }}
+                onClick={() => handleCopyInvite(clubLeague.id)}
+              >
+                {copiedInvite ? '✓ Copied!' : '📋 Copy'}
+              </button>
+            </div>
+          </div>
+
+          {/* Quick REFEREE button */}
+          <button
+            className="call-btn w-full py-3 rounded-xl font-black"
+            style={{
+              background: 'linear-gradient(135deg, rgba(0,212,255,0.2), rgba(0,136,255,0.15))',
+              border: '1.5px solid rgba(0,212,255,0.4)',
+              color: '#00d4ff',
+              fontSize: 'clamp(12px, 1.7vw, 16px)',
+              letterSpacing: '0.5px',
+            }}
+            onClick={handleClubReferee}
+          >
+            🏅 QUICK REFEREE — {clubLeague.teams[0] ?? clubLeague.name} vs ...
+          </button>
+
+          {/* Match Log header */}
+          <div className="flex items-center justify-between">
+            <div className="font-bold text-white/60" style={{ fontSize: 'clamp(10px, 1.3vw, 13px)', letterSpacing: '0.8px' }}>
+              📋 MATCH LOG ({clubMatches.length})
+            </div>
+            <button
+              className="call-btn px-3 py-1.5 rounded-lg font-bold"
+              style={{ background: 'rgba(255,200,0,0.12)', border: '1px solid rgba(255,200,0,0.3)', color: '#ffc800', fontSize: 'clamp(10px, 1.3vw, 12px)' }}
+              onClick={() => setShowAddMatch((v) => !v)}
+            >
+              {showAddMatch ? '✕ Cancel' : '+ Add Result'}
+            </button>
+          </div>
+
+          {/* Add match form */}
+          {showAddMatch && (
+            <div
+              className="rounded-xl p-3 space-y-2"
+              style={{ background: 'rgba(255,200,0,0.05)', border: '1px solid rgba(255,200,0,0.18)' }}
+            >
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-white/40 block font-bold mb-1" style={{ fontSize: 'clamp(9px, 1.1vw, 11px)' }}>DATE</label>
+                  <input
+                    type="date"
+                    value={newMatch.date}
+                    onChange={(e) => setNewMatch((m) => ({ ...m, date: e.target.value }))}
+                    className="w-full rounded-lg px-2 py-2"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label className="text-white/40 block font-bold mb-1" style={{ fontSize: 'clamp(9px, 1.1vw, 11px)' }}>HOME TEAM</label>
+                  <input
+                    type="text"
+                    placeholder={clubLeague.teams[0] ?? 'Home'}
+                    value={newMatch.homeTeam}
+                    onChange={(e) => setNewMatch((m) => ({ ...m, homeTeam: e.target.value }))}
+                    className="w-full rounded-lg px-2 py-2"
+                    style={inputStyle}
+                    maxLength={40}
+                  />
+                </div>
+                <div>
+                  <label className="text-white/40 block font-bold mb-1" style={{ fontSize: 'clamp(9px, 1.1vw, 11px)' }}>AWAY TEAM</label>
+                  <input
+                    type="text"
+                    placeholder="Away"
+                    value={newMatch.awayTeam}
+                    onChange={(e) => setNewMatch((m) => ({ ...m, awayTeam: e.target.value }))}
+                    className="w-full rounded-lg px-2 py-2"
+                    style={inputStyle}
+                    maxLength={40}
+                  />
+                </div>
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1">
+                    <label className="text-white/40 block font-bold mb-1" style={{ fontSize: 'clamp(9px, 1.1vw, 11px)' }}>SCORE</label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="0"
+                        max="99"
+                        value={newMatch.homeScore}
+                        onChange={(e) => setNewMatch((m) => ({ ...m, homeScore: e.target.value }))}
+                        className="w-full rounded-lg px-2 py-2 text-center"
+                        style={inputStyle}
+                      />
+                      <span className="text-white/40 font-black">–</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="99"
+                        value={newMatch.awayScore}
+                        onChange={(e) => setNewMatch((m) => ({ ...m, awayScore: e.target.value }))}
+                        className="w-full rounded-lg px-2 py-2 text-center"
+                        style={inputStyle}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label className="text-white/40 block font-bold mb-1" style={{ fontSize: 'clamp(9px, 1.1vw, 11px)' }}>NOTES (optional)</label>
+                <input
+                  type="text"
+                  placeholder="Any notes..."
+                  value={newMatch.notes}
+                  onChange={(e) => setNewMatch((m) => ({ ...m, notes: e.target.value }))}
+                  className="w-full rounded-lg px-2 py-2"
+                  style={inputStyle}
+                  maxLength={120}
+                />
+              </div>
+              <button
+                className="call-btn w-full py-2.5 rounded-lg font-bold"
+                disabled={!newMatch.homeTeam.trim() || !newMatch.awayTeam.trim()}
+                style={{
+                  background: newMatch.homeTeam && newMatch.awayTeam ? 'rgba(255,200,0,0.18)' : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${newMatch.homeTeam && newMatch.awayTeam ? 'rgba(255,200,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                  color: newMatch.homeTeam && newMatch.awayTeam ? '#ffc800' : 'rgba(255,255,255,0.25)',
+                  fontSize: 'clamp(11px, 1.4vw, 14px)',
+                }}
+                onClick={handleAddClubMatch}
+              >
+                SAVE RESULT
+              </button>
+            </div>
+          )}
+
+          {/* Match list */}
+          {clubMatches.length === 0 && !showAddMatch && (
+            <div className="flex flex-col items-center justify-center py-10 text-white/30 gap-2">
+              <span style={{ fontSize: 'clamp(28px, 4vw, 40px)' }}>📋</span>
+              <div style={{ fontSize: 'clamp(12px, 1.6vw, 15px)' }}>No match results yet</div>
+            </div>
+          )}
+          {clubMatches.map((m) => (
+            <div
+              key={m.id}
+              className="rounded-xl p-3"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="text-white/40 flex-shrink-0" style={{ fontSize: 'clamp(9px, 1.1vw, 11px)', minWidth: 60 }}>
+                  {new Date(m.date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                </div>
+                <div className="flex-1 font-bold truncate" style={{ fontSize: 'clamp(11px, 1.5vw, 14px)' }}>
+                  {m.homeTeam}
+                  <span className="mx-2 font-black" style={{ color: '#00d4ff' }}>{m.homeScore}–{m.awayScore}</span>
+                  {m.awayTeam}
+                </div>
+                {m.callCount > 0 && (
+                  <div className="flex-shrink-0 text-white/40" style={{ fontSize: 'clamp(9px, 1.1vw, 11px)' }}>
+                    {m.callCount} calls
+                  </div>
+                )}
+              </div>
+              {m.notes && (
+                <div className="text-white/35 mt-1 truncate" style={{ fontSize: 'clamp(9px, 1.1vw, 11px)' }}>
+                  {m.notes}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
 

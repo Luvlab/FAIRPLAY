@@ -16,7 +16,6 @@ export default function AuthModal() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
   if (authModal === 'hidden') return null;
 
   const handleSubmit = async () => {

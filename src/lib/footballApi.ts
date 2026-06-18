@@ -26,6 +26,7 @@ export interface LiveMatch {
 }
 
 export const LEAGUES = [
+  { id: 'fifa.world',   name: 'FIFA World Cup 2026',  flag: '🏆', region: 'International' },
   { id: 'eng.1',        name: 'Premier League',       flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', region: 'Europe' },
   { id: 'esp.1',        name: 'La Liga',               flag: '🇪🇸', region: 'Europe' },
   { id: 'ger.1',        name: 'Bundesliga',            flag: '🇩🇪', region: 'Europe' },
@@ -111,6 +112,7 @@ export async function fetchLeagueMatches(leagueId: string): Promise<LiveMatch[]>
 /** Fetch live + today's matches across the top leagues simultaneously */
 export async function fetchAllMatches(): Promise<LiveMatch[]> {
   const topLeagues = [
+    'fifa.world',  // 🏆 World Cup — always first
     'eng.1', 'esp.1', 'ger.1', 'ita.1', 'fra.1',
     'usa.1', 'ned.1', 'por.1', 'bra.1', 'arg.1',
     'uefa.champions', 'uefa.europa', 'jpn.1', 'sau.1',
@@ -125,6 +127,60 @@ export async function fetchAllMatches(): Promise<LiveMatch[]> {
     const order = { live: 0, ht: 0, pre: 1, ft: 2 };
     return (order[a.status] ?? 3) - (order[b.status] ?? 3);
   });
+}
+
+// ── World Cup Group Standings ────────────────────────────────────────────────
+
+export interface WCTeamStanding {
+  teamName: string;
+  logo: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  points: number;
+}
+
+export interface WCGroup {
+  name: string;
+  entries: WCTeamStanding[];
+}
+
+export async function fetchWorldCupGroups(): Promise<WCGroup[]> {
+  try {
+    const res = await fetch(
+      'https://site.api.espn.com/apis/v2/sports/soccer/fifa.world/standings',
+      { signal: AbortSignal.timeout(6000) }
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const children: any[] = data.children ?? [];
+    return children.map((g) => ({
+      name: g.name ?? 'Group',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      entries: (g.standings?.entries ?? []).map((e: any) => {
+        const stats: Record<string, string> = {};
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        for (const s of e.stats ?? []) stats[s.name] = s.displayValue ?? '0';
+        return {
+          teamName: e.team?.displayName ?? '?',
+          logo: e.team?.logo ?? '',
+          played:       parseInt(stats['gamesPlayed']     ?? '0') || 0,
+          won:          parseInt(stats['wins']            ?? '0') || 0,
+          drawn:        parseInt(stats['ties']            ?? '0') || 0,
+          lost:         parseInt(stats['losses']         ?? '0') || 0,
+          goalsFor:     parseInt(stats['pointsFor']      ?? '0') || 0,
+          goalsAgainst: parseInt(stats['pointsAgainst'] ?? '0') || 0,
+          points:       parseInt(stats['points']         ?? '0') || 0,
+        } as WCTeamStanding;
+      }),
+    }));
+  } catch {
+    return [];
+  }
 }
 
 /** Convert a LiveMatch into the Game shape the store uses */

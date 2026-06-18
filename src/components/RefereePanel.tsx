@@ -3,6 +3,7 @@ import { SOCCER_CALLS, CALL_CATEGORIES } from '../data/soccerCalls';
 import { useGameStore, isGameLive, computeLiveMinute } from '../store/gameStore';
 import { playWhistle } from '../lib/whistle';
 import { useT } from '../context/I18nContext';
+import CameraCapture from './CameraCapture';
 
 const CARD_CALL_IDS = new Set(['yellow', 'second_yellow', 'red', 'spitting', 'violent', 'biting']);
 
@@ -14,18 +15,22 @@ interface PendingCall {
   minute: number;
 }
 
-/** Ticks every 30 s, returns the computed live minute for the current game */
+/** Ticks every 5 s, returns the computed live minute for the current game.
+ *  Respects the paused-timer state for custom matches. */
 function useLiveMinute(): number {
-  const currentGame    = useGameStore((s) => s.currentGame);
-  const clockFetchedAt = useGameStore((s) => s.clockFetchedAt);
-  const [, setTick]    = useState(0);
+  const currentGame        = useGameStore((s) => s.currentGame);
+  const clockFetchedAt     = useGameStore((s) => s.clockFetchedAt);
+  const matchTimerPaused   = useGameStore((s) => s.matchTimerPaused);
+  const matchTimerFrozenMinute = useGameStore((s) => s.matchTimerFrozenMinute);
+  const [, setTick]        = useState(0);
 
   useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 30_000);
+    const id = setInterval(() => setTick((t) => t + 1), 5_000);
     return () => clearInterval(id);
   }, []);
 
   if (!currentGame) return 0;
+  if (matchTimerPaused && currentGame.leagueId === 'custom') return matchTimerFrozenMinute;
   return computeLiveMinute(currentGame.minute, clockFetchedAt, currentGame.status);
 }
 
@@ -35,8 +40,14 @@ export default function RefereePanel() {
   const submitLiveCall   = useGameStore((s) => s.submitLiveCall);
   const activeCategory   = useGameStore((s) => s.activeCategory);
   const setActiveCategory = useGameStore((s) => s.setActiveCategory);
-  const currentGame      = useGameStore((s) => s.currentGame);
-  const isOnline         = useGameStore((s) => s.isOnline);
+  const currentGame        = useGameStore((s) => s.currentGame);
+  const isOnline           = useGameStore((s) => s.isOnline);
+  const matchTimerPaused   = useGameStore((s) => s.matchTimerPaused);
+  const pauseMatchTimer    = useGameStore((s) => s.pauseMatchTimer);
+  const resumeMatchTimer   = useGameStore((s) => s.resumeMatchTimer);
+  const addMatchMinutes    = useGameStore((s) => s.addMatchMinutes);
+  const endCustomMatch     = useGameStore((s) => s.endCustomMatch);
+  const isCustomMatch      = currentGame?.leagueId === 'custom';
 
   const [lastCall, setLastCall]       = useState<string | null>(null);
   const [pendingCall, setPendingCall] = useState<PendingCall | null>(null);
@@ -179,6 +190,53 @@ export default function RefereePanel() {
         </div>
       </div>
 
+      {/* ── Custom match timer bar ─────────────────────────────────────── */}
+      {isCustomMatch && gameLive && (
+        <div
+          className="flex items-center gap-2 px-3 py-2"
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0, background: 'rgba(0,212,255,0.04)' }}
+        >
+          <span className="font-black text-white/40" style={{ fontSize: 'clamp(9px, 1.2vw, 12px)', letterSpacing: '0.8px' }}>
+            ⏱ {liveMinute}'
+          </span>
+          <div className="flex gap-1.5 flex-1">
+            <button
+              className="call-btn px-3 py-1.5 rounded-lg font-bold flex-shrink-0"
+              style={{
+                background: matchTimerPaused ? 'rgba(0,255,136,0.12)' : 'rgba(255,170,0,0.12)',
+                border: `1px solid ${matchTimerPaused ? 'rgba(0,255,136,0.3)' : 'rgba(255,170,0,0.3)'}`,
+                color: matchTimerPaused ? '#00ff88' : '#ffaa00',
+                fontSize: 'clamp(10px, 1.3vw, 13px)',
+              }}
+              onClick={() => matchTimerPaused ? resumeMatchTimer() : pauseMatchTimer()}
+            >
+              {matchTimerPaused ? '▶ Resume' : '⏸ Pause'}
+            </button>
+            <button
+              className="call-btn px-2.5 py-1.5 rounded-lg font-bold"
+              style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.25)', color: '#00d4ff', fontSize: 'clamp(10px, 1.3vw, 13px)' }}
+              onClick={() => addMatchMinutes(1)}
+            >
+              +1'
+            </button>
+            <button
+              className="call-btn px-2.5 py-1.5 rounded-lg font-bold"
+              style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.25)', color: '#00d4ff', fontSize: 'clamp(10px, 1.3vw, 13px)' }}
+              onClick={() => addMatchMinutes(5)}
+            >
+              +5'
+            </button>
+            <button
+              className="call-btn px-2.5 py-1.5 rounded-lg font-bold ml-auto"
+              style={{ background: 'rgba(255,68,68,0.1)', border: '1px solid rgba(255,68,68,0.25)', color: '#ff5555', fontSize: 'clamp(10px, 1.3vw, 13px)' }}
+              onClick={endCustomMatch}
+            >
+              ■ End
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Call grid ──────────────────────────────────────────────────── */}
       <div
         className="flex-1 p-2 overflow-hidden"
@@ -265,6 +323,9 @@ export default function RefereePanel() {
           {isOnline ? '🌐' : '📴'} {SOCCER_CALLS.find((c) => c.id === lastCall)?.name.toUpperCase()} — {t.submitted}
         </div>
       )}
+
+      {/* ── Camera capture FAB ────────────────────────────────────────── */}
+      <CameraCapture />
 
       {/* ── Player tag bottom sheet ────────────────────────────────────── */}
       {pendingCall && (

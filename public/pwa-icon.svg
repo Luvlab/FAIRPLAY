@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0d1117"/>
+  <circle cx="256" cy="210" r="148" fill="white"/>
+  <!-- Soccer ball pentagons -->
+  <circle cx="256" cy="210" r="148" fill="white" stroke="#0d1117" stroke-width="8"/>
+  <!-- Center pentagon -->
+  <polygon points="256,165 295,193 280,238 232,238 217,193" fill="#0d1117"/>
+  <!-- Top pentagon -->
+  <polygon points="256,83 296,112 295,155 256,165 217,155 216,112" fill="#0d1117" opacity="0.15"/>
+  <!-- Side patches -->
+  <polygon points="368,155 394,193 380,235 340,240 316,205 330,163" fill="#0d1117" opacity="0.15"/>
+  <polygon points="144,155 118,193 132,235 172,240 196,205 182,163" fill="#0d1117" opacity="0.15"/>
+  <polygon points="370,258 392,305 363,340 320,330 310,285 340,258" fill="#0d1117" opacity="0.15"/>
+  <polygon points="142,258 120,305 149,340 192,330 202,285 172,258" fill="#0d1117" opacity="0.15"/>
+  <!-- Bottom text -->
+  <text x="256" y="420" font-family="Arial Black, Arial, sans-serif" font-size="56" font-weight="900" text-anchor="middle" fill="#00d4ff" letter-spacing="4">FAIRPLAY</text>
+  <!-- Cyan glow ring -->
+  <circle cx="256" cy="210" r="152" fill="none" stroke="#00d4ff" stroke-width="4" opacity="0.5"/>
+</svg>

@@ -26,7 +26,7 @@ export const SOCCER_CALLS: SoccerCall[] = [
   // Cards
   { id: 'yellow', name: 'Yellow Card', shortName: 'YELLOW', emoji: '🟨', category: 'card', color: '#FFD700', description: 'Caution / booking', signal: 'Show yellow card' },
   { id: 'second_yellow', name: '2nd Yellow → Red', shortName: '2ND YEL', emoji: '🟨🟥', category: 'card', color: '#FF8C00', description: 'Second yellow = dismissal', signal: 'Show yellow then red' },
-  { id: 'red', name: 'Red Card', shortName: 'RED', emoji: '🟥', category: 'card', color: '#DC143C', description: 'Dismissal from game', signal: 'Show red card' },
+  { id: 'red', name: 'Red Card', shortName: 'RED', emoji: '🟥', category: 'card', color: '#FF0000', description: 'Dismissal from game', signal: 'Show red card' },
 
   // Restarts
   { id: 'free_kick', name: 'Free Kick', shortName: 'FK', emoji: '⚽', category: 'restart', color: '#00d4ff', description: 'Direct free kick awarded', signal: 'Point to spot' },
