@@ -46,6 +46,62 @@ function getBand(score: number): Band {
   return BANDS.find((b) => score <= b.maxScore) ?? BANDS[BANDS.length - 1];
 }
 
+function barColor(pct: number): string {
+  if (pct < 33) return '#00ff88';
+  if (pct < 66) return '#ffaa00';
+  return '#ff4444';
+}
+
+function fmtEur(n: number): string {
+  if (n >= 1_000_000) return `€${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000)     return `€${(n / 1_000).toFixed(0)}K`;
+  return `€${n.toFixed(0)}`;
+}
+
+function fmtNox(kg: number): string {
+  if (kg >= 1000) return `${(kg / 1000).toFixed(1)} tonnes`;
+  return `${kg.toFixed(0)} kg`;
+}
+
+// ── Severity bar ─────────────────────────────────────────────────────────────
+function SeverityBar({ pct }: { pct: number }) {
+  const clamped = Math.min(100, Math.max(0, pct));
+  return (
+    <div style={{ height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.1)', overflow: 'hidden', margin: '8px 0 4px' }}>
+      <div
+        style={{
+          height: '100%',
+          width: `${clamped}%`,
+          borderRadius: 2,
+          background: barColor(clamped),
+          transition: 'width 0.35s ease, background 0.35s ease',
+        }}
+      />
+    </div>
+  );
+}
+
+// ── Metric card wrapper ───────────────────────────────────────────────────────
+function MetricCard({ children, fullWidth }: { children: React.ReactNode; fullWidth?: boolean }) {
+  return (
+    <div
+      style={{
+        background: 'rgba(255,255,255,0.03)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 12,
+        padding: 16,
+        gridColumn: fullWidth ? '1 / -1' : undefined,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 6,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ── Dial card (input slider) ──────────────────────────────────────────────────
 interface DialCardProps {
   emoji: string;
   label: string;
@@ -73,52 +129,46 @@ function DialCard({ emoji, label, subLabel, color, min, max, step, value, displa
         flexDirection: 'column',
       }}
     >
-      {/* Coloured header bar */}
       <div style={{ height: 4, background: color, width: '100%' }} />
-      <div style={{ padding: 'clamp(12px,2vw,18px)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ padding: 'clamp(10px,1.8vw,16px)', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 'clamp(18px,2.5vw,24px)', lineHeight: 1 }}>{emoji}</span>
+          <span style={{ fontSize: 'clamp(16px,2.2vw,20px)', lineHeight: 1 }}>{emoji}</span>
           <div>
-            <div style={{ fontSize: 'clamp(10px,1.3vw,12px)', fontWeight: 700, letterSpacing: '0.12em', color: color, textTransform: 'uppercase' }}>
+            <div style={{ fontSize: 'clamp(9px,1.2vw,11px)', fontWeight: 700, letterSpacing: '0.12em', color: color, textTransform: 'uppercase' }}>
               {label}
             </div>
-            <div style={{ fontSize: 'clamp(9px,1.2vw,11px)', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>
+            <div style={{ fontSize: 'clamp(8px,1.1vw,10px)', color: 'rgba(255,255,255,0.3)', marginTop: 1 }}>
               {subLabel}
             </div>
           </div>
         </div>
-
-        {/* Value display */}
-        <div style={{ fontSize: 'clamp(16px,2.5vw,22px)', fontWeight: 900, color: '#fff', lineHeight: 1 }}>
+        <div style={{ fontSize: 'clamp(14px,2.2vw,18px)', fontWeight: 900, color: '#fff', lineHeight: 1 }}>
           {displayValue}
         </div>
-
-        {/* Slider */}
-        <div style={{ position: 'relative' }}>
-          <input
-            type="range"
-            min={min}
-            max={max}
-            step={step}
-            value={value}
-            onChange={(e) => onChange(Number(e.target.value))}
-            style={{
-              width: '100%',
-              appearance: 'none',
-              WebkitAppearance: 'none',
-              height: 4,
-              borderRadius: 2,
-              outline: 'none',
-              cursor: 'pointer',
-              background: `linear-gradient(to right, ${color} ${pct}%, rgba(255,255,255,0.12) ${pct}%)`,
-            }}
-          />
-        </div>
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          style={{
+            width: '100%',
+            appearance: 'none',
+            WebkitAppearance: 'none',
+            height: 4,
+            borderRadius: 2,
+            outline: 'none',
+            cursor: 'pointer',
+            background: `linear-gradient(to right, ${color} ${pct}%, rgba(255,255,255,0.12) ${pct}%)`,
+          }}
+        />
       </div>
     </div>
   );
 }
 
+// ── Main component ────────────────────────────────────────────────────────────
 export default function ImpactPanel() {
   const impactGame    = useGameStore((s) => s.impactGame);
   const setImpactGame = useGameStore((s) => s.setImpactGame);
@@ -128,7 +178,6 @@ export default function ImpactPanel() {
   const [players,    setPlayers]    = useState(0);
   const [ads,        setAds]        = useState(0);
 
-  // Auto-populate dials from preset whenever impactGame changes
   useEffect(() => {
     if (impactGame) {
       const preset = getPresetForLeague(impactGame.leagueId);
@@ -146,36 +195,118 @@ export default function ImpactPanel() {
     setAds(p.ads);
   }
 
-  const { planetScore, transportScore, youthScore, societyScore, score } = useMemo(() => {
+  // ── All metrics computed together ─────────────────────────────────────────
+  const metrics = useMemo(() => {
+    // ── Extraction Index (0-100) ──────────────────────────────────────────
     const planetScore    = Math.min(25, (Math.log10(Math.max(1, attendance)) / Math.log10(90000)) * 25);
     const transportScore = Math.min(25, (Math.log10(Math.max(1, km))         / Math.log10(2800))  * 25);
     const youthScore     = (players / 22) * 25;
     const societyScore   = Math.min(25, (ads / 500) * 25);
-    const score          = planetScore + transportScore + youthScore + societyScore;
-    return { planetScore, transportScore, youthScore, societyScore, score };
+    const extractionIndex = planetScore + transportScore + youthScore + societyScore;
+
+    // ── Air Toxins ────────────────────────────────────────────────────────
+    const carFans       = attendance * 0.4;
+    const carTrips      = carFans / 1.6;
+    const roadKm        = carTrips * km * 2;
+
+    const planeFans     = km > 300 ? attendance * 0.25 : 0;
+    const planePassKm   = planeFans * km * 2;
+
+    const noxRoad  = roadKm      * 0.00052;
+    const noxAir   = planePassKm * 0.000038;
+    const noxStad  = attendance  * 0.0008;
+    const totalNox = noxRoad + noxAir + noxStad;
+
+    const pm25Road  = roadKm     * 0.00004;
+    const pm25Stad  = attendance * 0.0002;
+    const totalPm25 = pm25Road + pm25Stad;
+
+    const noxSeverity = Math.min(100, (totalNox / 5000) * 100);
+
+    let noxInsight: string;
+    if (totalNox < 10)   noxInsight = 'Equivalent to a few diesel vans. Negligible local air impact.';
+    else if (totalNox < 500)  noxInsight = 'Similar to a heavy traffic day on a busy street.';
+    else if (totalNox < 5000) noxInsight = `Equivalent to ${Math.round(totalNox / 5)} diesel trucks idling for 8 hours.`;
+    else                       noxInsight = 'Industrial-scale pollution event. Affects air quality for nearby communities for days.';
+
+    // ── Economic Drain ────────────────────────────────────────────────────
+    const retentionRate =
+      players === 0 ? 0.90 :
+      players <= 6  ? 0.70 :
+      players <= 14 ? 0.45 :
+      km < 100      ? 0.30 :
+      km < 500      ? 0.18 : 0.08;
+
+    const avgTicket =
+      players === 0 ? 5 :
+      players <= 14 ? 25 :
+      km < 200      ? 55 : 120;
+
+    const grossRevenue   = attendance * avgTicket;
+    const drainedRevenue = grossRevenue * (1 - retentionRate);
+    const drainPct       = (1 - retentionRate) * 100;
+
+    let economicInsight: string;
+    if      (retentionRate > 0.7) economicInsight = 'Most money stays in the community. This is how football should work.';
+    else if (retentionRate > 0.4) economicInsight = 'Significant share flows to national bodies and sponsors.';
+    else if (retentionRate > 0.2) economicInsight = 'Multinational broadcast deals and sponsors capture most of the value.';
+    else                           economicInsight = 'The local community hosts the spectacle. Global corporations take the profit.';
+
+    // ── Human Cost (0-100) ────────────────────────────────────────────────
+    const proScore    = (players / 22) * 40;
+    const youthRisk   = Math.min(30, (ads * attendance * 0.3) / 100000 * 10);
+    const originScore = players > 0 ? Math.min(30, (km / 2800) * 30) : 0;
+    const humanCost   = proScore + youthRisk + originScore;
+
+    let humanInsight: string;
+    if      (humanCost < 20) humanInsight = 'Community sport. No significant exploitation dynamic.';
+    else if (humanCost < 45) humanInsight = 'Some commercial pressure. Young players are a resource here.';
+    else if (humanCost < 70) humanInsight = 'Significant extraction of player value and youth attention.';
+    else                      humanInsight = "Elite football: global labour market where producing nations get agents' fees, not development.";
+
+    // ── Talent Pipeline ───────────────────────────────────────────────────
+    const talentDrainPerMatch =
+      players === 0 ? 0 :
+      players <= 8  ? 500 :
+      players <= 14 ? 50000 :
+      km < 100      ? 200000 :
+      km < 500      ? 1500000 :
+      km < 1000     ? 4000000 :
+                      8000000;
+
+    const scoutedChildren = players >= 18 ? Math.round(attendance / 12) : 0;
+
+    return {
+      // Extraction Index
+      extractionIndex, planetScore, transportScore, youthScore, societyScore,
+      // Air Toxins
+      totalNox, totalPm25, noxSeverity, noxInsight,
+      // Economic
+      drainedRevenue, drainPct, retentionRate, economicInsight,
+      // Human
+      humanCost, proScore, youthRisk, originScore, humanInsight,
+      // Talent
+      talentDrainPerMatch, scoutedChildren,
+    };
   }, [attendance, km, players, ads]);
 
-  const band = getBand(score);
+  const band = getBand(metrics.extractionIndex);
 
-  // Biggest lever
   const levers = [
-    { name: 'Planet',    value: planetScore    },
-    { name: 'Transport', value: transportScore },
-    { name: 'Youth',     value: youthScore     },
-    { name: 'Society',   value: societyScore   },
+    { name: 'Planet',    value: metrics.planetScore    },
+    { name: 'Transport', value: metrics.transportScore },
+    { name: 'Human',     value: metrics.youthScore     },
+    { name: 'Society',   value: metrics.societyScore   },
   ];
   const biggest = levers.reduce((a, b) => (b.value > a.value ? b : a));
 
   const LEVER_HINTS: Record<string, string> = {
     Planet:    'Smaller, more local events have a dramatically lower carbon spine.',
     Transport: 'Switch to public transport or active travel to cut this in half.',
-    Youth:     'Grassroots and youth football avoids the commercial extraction economy.',
+    Human:     'Grassroots and youth football avoids the commercial extraction economy.',
     Society:   'Zero gambling ads means no normalisation of betting to young audiences.',
   };
 
-  const fillPct = Math.min(100, Math.max(0, score));
-
-  // Derive status label for context banner
   function statusLabel(status: string, minute?: number): string {
     if (status === 'live') return minute ? `${minute}'` : 'LIVE';
     if (status === 'ht')   return 'HT';
@@ -184,10 +315,10 @@ export default function ImpactPanel() {
     return status.toUpperCase();
   }
 
-  // Derive tier info for context banner
   const gamePreset = impactGame ? getPresetForLeague(impactGame.leagueId) : null;
   const tierColor  = gamePreset ? (TIER_COLORS[gamePreset.tier] ?? '#00d4ff') : '#00d4ff';
 
+  // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div
       style={{
@@ -205,7 +336,7 @@ export default function ImpactPanel() {
           padding: 'clamp(16px,3vw,32px)',
           display: 'flex',
           flexDirection: 'column',
-          gap: 'clamp(20px,3.5vw,36px)',
+          gap: 'clamp(16px,3vw,28px)',
         }}
       >
 
@@ -233,33 +364,32 @@ export default function ImpactPanel() {
               letterSpacing: '0.03em',
             }}
           >
-            🌡️ THE FAIRPLAY THERMOMETER
+            SCORING GOALS FOR HUMANITY
           </h1>
           <p
             style={{
               margin: '10px 0 6px',
-              fontSize: 'clamp(13px,1.8vw,17px)',
-              color: 'rgba(255,255,255,0.55)',
+              fontSize: 'clamp(12px,1.6vw,15px)',
+              color: 'rgba(255,255,255,0.45)',
               lineHeight: 1.5,
               maxWidth: 520,
               marginLeft: 'auto',
               marginRight: 'auto',
             }}
           >
-            SCORING GOALS FOR HUMANITY
+            What does football really cost — and who pays the price?
           </p>
           <div style={{ fontSize: 'clamp(10px,1.3vw,12px)', color: 'rgba(255,255,255,0.22)', letterSpacing: '0.06em' }}>
-            Per-attendee impact score · DEFRA-aligned carbon methodology
+            Adjust the four dials below to see concrete real-world impact metrics
           </div>
         </div>
 
         {/* ── B. Game context banner (Mode A) OR preset pills (Mode B) ── */}
         {impactGame ? (
-          /* Mode A — game context banner */
           <div
             style={{
               borderRadius: 16,
-              background: `linear-gradient(135deg, rgba(255,100,0,0.1), rgba(255,100,0,0.04))`,
+              background: 'linear-gradient(135deg, rgba(255,100,0,0.1), rgba(255,100,0,0.04))',
               border: '1px solid rgba(255,100,0,0.25)',
               padding: 'clamp(14px,2.2vw,22px)',
               display: 'flex',
@@ -267,7 +397,6 @@ export default function ImpactPanel() {
               gap: 10,
             }}
           >
-            {/* Top row: teams + clear button */}
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div
@@ -317,8 +446,6 @@ export default function ImpactPanel() {
                 ✕ Clear game
               </button>
             </div>
-
-            {/* Tier badge + context */}
             {gamePreset && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <span
@@ -341,13 +468,11 @@ export default function ImpactPanel() {
                 </span>
               </div>
             )}
-
             <div style={{ fontSize: 'clamp(9px,1.2vw,11px)', color: 'rgba(255,255,255,0.25)', fontStyle: 'italic' }}>
               Dials pre-loaded from league profile — adjust freely below.
             </div>
           </div>
         ) : (
-          /* Mode B — open explorer preset pills */
           <div style={{ display: 'flex', gap: 'clamp(8px,1.5vw,14px)', flexWrap: 'wrap', justifyContent: 'center' }}>
             {OPEN_PRESETS.map((p) => (
               <button
@@ -388,8 +513,8 @@ export default function ImpactPanel() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))',
-            gap: 'clamp(10px,1.5vw,16px)',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))',
+            gap: 'clamp(8px,1.4vw,14px)',
           }}
         >
           <DialCard
@@ -407,7 +532,7 @@ export default function ImpactPanel() {
           <DialCard
             emoji="🚗"
             label="TRANSPORT"
-            subLabel="Return trip. Car = 0.171 kg CO₂/km·person (DEFRA)"
+            subLabel="Return trip distance (DEFRA factors)"
             color="#ffaa00"
             min={1}
             max={5000}
@@ -431,7 +556,7 @@ export default function ImpactPanel() {
           <DialCard
             emoji="🎰"
             label="SOCIETY"
-            subLabel="Pitch-side, shirts, broadcast. Avg Premier League: 700+ per game"
+            subLabel="Gambling ads: pitch-side, shirts, broadcast"
             color="#ff6b35"
             min={0}
             max={500}
@@ -442,120 +567,229 @@ export default function ImpactPanel() {
           />
         </div>
 
-        {/* ── D. Thermometer gauge ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-          {/* Score readout */}
-          <div
+        {/* ── D. Dashboard section header ── */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+          }}
+        >
+          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+          <span
             style={{
-              fontSize: 'clamp(42px,7vw,64px)',
-              fontWeight: 900,
-              color: band.color,
-              lineHeight: 1,
-              textShadow: `0 0 32px ${band.color}55`,
-              transition: 'color 0.3s, text-shadow 0.3s',
+              fontSize: 'clamp(9px,1.2vw,11px)',
+              fontWeight: 700,
+              letterSpacing: '0.2em',
+              color: 'rgba(255,255,255,0.25)',
+              textTransform: 'uppercase',
+              whiteSpace: 'nowrap',
             }}
           >
-            {score.toFixed(1)}°
-          </div>
+            MATCH IMPACT DASHBOARD
+          </span>
+          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+        </div>
 
-          {/* The gauge itself */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            {/* Tube */}
-            <div style={{ position: 'relative', width: 40, height: 280, flexShrink: 0 }}>
-              {/* Background tube */}
-              <div
+        {/* ── E. 5-card grid ── */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))',
+            gap: 'clamp(10px,1.6vw,16px)',
+          }}
+        >
+
+          {/* Card 1 — Extraction Index */}
+          <MetricCard>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 20 }}>🌡️</span>
+              <span style={{ fontSize: 'clamp(9px,1.2vw,11px)', fontWeight: 700, letterSpacing: '0.14em', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>
+                Extraction Index
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <span style={{ fontSize: 'clamp(22px,3.5vw,32px)', fontWeight: 900, color: band.color, transition: 'color 0.3s' }}>
+                {metrics.extractionIndex.toFixed(0)}
+              </span>
+              <span style={{ fontSize: 'clamp(11px,1.4vw,13px)', color: 'rgba(255,255,255,0.5)' }}>/100</span>
+              <span
                 style={{
-                  position: 'absolute',
-                  inset: 0,
-                  borderRadius: 20,
-                  background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  overflow: 'hidden',
+                  marginLeft: 6,
+                  fontSize: 'clamp(9px,1.2vw,11px)',
+                  fontWeight: 700,
+                  color: band.color,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
                 }}
               >
-                {/* Mercury fill — animates from bottom */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: `${fillPct}%`,
-                    background: `linear-gradient(to top, ${band.color}, #ff3333)`,
-                    borderRadius: '0 0 20px 20px',
-                    transition: 'height 0.4s cubic-bezier(0.4,0,0.2,1), background 0.4s',
-                    boxShadow: `0 0 16px ${band.color}66`,
-                  }}
-                />
+                {band.dot} {band.label}
+              </span>
+            </div>
+            <SeverityBar pct={metrics.extractionIndex} />
+            <div style={{ fontSize: 'clamp(10px,1.3vw,12px)', color: 'rgba(255,255,255,0.35)', lineHeight: 1.5 }}>
+              {band.description}
+            </div>
+            <div style={{ fontSize: 'clamp(9px,1.1vw,11px)', color: 'rgba(255,255,255,0.2)', marginTop: 4, lineHeight: 1.6 }}>
+              Planet {metrics.planetScore.toFixed(0)} · Transport {metrics.transportScore.toFixed(0)} · Human {metrics.youthScore.toFixed(0)} · Society {metrics.societyScore.toFixed(0)}
+            </div>
+          </MetricCard>
+
+          {/* Card 2 — Air Toxins */}
+          <MetricCard>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 20 }}>🌬️</span>
+              <span style={{ fontSize: 'clamp(9px,1.2vw,11px)', fontWeight: 700, letterSpacing: '0.14em', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>
+                Air Toxins
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                <span style={{ fontSize: 'clamp(22px,3.5vw,32px)', fontWeight: 900, color: '#fff' }}>
+                  {fmtNox(metrics.totalNox)}
+                </span>
+                <span style={{ fontSize: 'clamp(11px,1.4vw,13px)', color: 'rgba(255,255,255,0.5)' }}>NOₓ</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                <span style={{ fontSize: 'clamp(14px,2vw,18px)', fontWeight: 700, color: 'rgba(255,255,255,0.6)' }}>
+                  {metrics.totalPm25.toFixed(1)} kg
+                </span>
+                <span style={{ fontSize: 'clamp(10px,1.3vw,12px)', color: 'rgba(255,255,255,0.4)' }}>PM₂.₅</span>
               </div>
             </div>
+            <SeverityBar pct={metrics.noxSeverity} />
+            <div style={{ fontSize: 'clamp(10px,1.3vw,12px)', color: 'rgba(255,255,255,0.35)', lineHeight: 1.5 }}>
+              {metrics.noxInsight}
+            </div>
+          </MetricCard>
 
-            {/* Scale markers */}
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                height: 280,
-                paddingTop: 0,
-              }}
-            >
-              {[100, 75, 50, 25, 0].map((mark) => (
-                <div key={mark} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <div style={{ width: 8, height: 1, background: 'rgba(255,255,255,0.2)' }} />
-                  <span style={{ fontSize: 'clamp(10px,1.3vw,12px)', fontWeight: 700, color: 'rgba(255,255,255,0.3)', minWidth: 28 }}>
-                    {mark}°
-                  </span>
+          {/* Card 3 — Economic Drain */}
+          <MetricCard>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 20 }}>💰</span>
+              <span style={{ fontSize: 'clamp(9px,1.2vw,11px)', fontWeight: 700, letterSpacing: '0.14em', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>
+                Economic Drain
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <span style={{ fontSize: 'clamp(22px,3.5vw,32px)', fontWeight: 900, color: '#fff' }}>
+                {fmtEur(metrics.drainedRevenue)}
+              </span>
+              <span style={{ fontSize: 'clamp(11px,1.4vw,13px)', color: 'rgba(255,255,255,0.5)' }}>leaves locally</span>
+            </div>
+            <div style={{ fontSize: 'clamp(10px,1.3vw,12px)', fontWeight: 700, color: barColor(metrics.drainPct) }}>
+              {Math.round(metrics.drainPct)}% extracted from local economy
+            </div>
+            <SeverityBar pct={metrics.drainPct} />
+            <div style={{ fontSize: 'clamp(10px,1.3vw,12px)', color: 'rgba(255,255,255,0.35)', lineHeight: 1.5 }}>
+              {metrics.economicInsight}
+            </div>
+          </MetricCard>
+
+          {/* Card 4 — Human Cost */}
+          <MetricCard>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 20 }}>⛓️</span>
+              <span style={{ fontSize: 'clamp(9px,1.2vw,11px)', fontWeight: 700, letterSpacing: '0.14em', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>
+                Human Cost
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <span style={{ fontSize: 'clamp(22px,3.5vw,32px)', fontWeight: 900, color: '#fff' }}>
+                {metrics.humanCost.toFixed(0)}
+              </span>
+              <span style={{ fontSize: 'clamp(11px,1.4vw,13px)', color: 'rgba(255,255,255,0.5)' }}>/100</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2 }}>
+              {[
+                { label: 'Labour extraction', value: metrics.proScore,    max: 40 },
+                { label: 'Youth exposure',     value: metrics.youthRisk,  max: 30 },
+                { label: 'Origin disparity',   value: metrics.originScore, max: 30 },
+              ].map(({ label, value, max }) => (
+                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'clamp(9px,1.1vw,11px)', color: 'rgba(255,255,255,0.3)' }}>
+                  <span>{label}</span>
+                  <span style={{ fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>{value.toFixed(0)}/{max}</span>
                 </div>
               ))}
             </div>
-          </div>
+            <SeverityBar pct={metrics.humanCost} />
+            <div style={{ fontSize: 'clamp(10px,1.3vw,12px)', color: 'rgba(255,255,255,0.35)', lineHeight: 1.5 }}>
+              {metrics.humanInsight}
+            </div>
+          </MetricCard>
 
-          <div
-            style={{
-              fontSize: 'clamp(10px,1.3vw,12px)',
-              fontWeight: 700,
-              letterSpacing: '0.15em',
-              color: 'rgba(255,255,255,0.25)',
-              textTransform: 'uppercase',
-              marginTop: 4,
-            }}
-          >
-            FAIRPLAY TEMPERATURE
-          </div>
-        </div>
+          {/* Card 5 — Talent Pipeline (full width) */}
+          <MetricCard fullWidth>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 20 }}>🌍</span>
+              <span style={{ fontSize: 'clamp(9px,1.2vw,11px)', fontWeight: 700, letterSpacing: '0.14em', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>
+                Talent Pipeline Drain
+              </span>
+            </div>
 
-        {/* ── E. Interpretation band ── */}
-        <div
-          style={{
-            borderRadius: 16,
-            background: `linear-gradient(135deg, ${band.color}10, ${band.color}06)`,
-            border: `1px solid ${band.color}30`,
-            padding: 'clamp(16px,2.5vw,24px)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 14,
-            transition: 'background 0.4s, border-color 0.4s',
-          }}
-        >
-          <span style={{ fontSize: 'clamp(24px,4vw,36px)', lineHeight: 1, flexShrink: 0 }}>{band.dot}</span>
-          <div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 'clamp(22px,3.5vw,32px)', fontWeight: 900, color: '#fff' }}>
+                {fmtEur(metrics.talentDrainPerMatch)}
+              </span>
+              <span style={{ fontSize: 'clamp(11px,1.4vw,13px)', color: 'rgba(255,255,255,0.5)' }}>
+                extracted from producing nations per match of this type
+              </span>
+            </div>
+
+            {/* Flow diagram */}
             <div
               style={{
-                fontSize: 'clamp(14px,2vw,18px)',
-                fontWeight: 900,
-                color: band.color,
-                letterSpacing: '0.06em',
-                marginBottom: 4,
-                transition: 'color 0.4s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                flexWrap: 'wrap',
+                margin: '8px 0',
+                padding: '10px 14px',
+                background: 'rgba(255,255,255,0.03)',
+                borderRadius: 8,
+                border: '1px solid rgba(255,255,255,0.06)',
               }}
             >
-              {band.label}
+              {[
+                { text: 'Africa / S.America / E.Europe', color: 'rgba(255,255,255,0.7)' },
+                { text: '→', color: 'rgba(255,255,255,0.25)' },
+                { text: 'TALENT', color: '#00d4ff', bold: true },
+                { text: '→', color: 'rgba(255,255,255,0.25)' },
+                { text: 'Western Leagues', color: 'rgba(255,255,255,0.7)' },
+                { text: '→', color: 'rgba(255,255,255,0.25)' },
+                { text: 'WEALTH', color: '#ffaa00', bold: true },
+                { text: '→', color: 'rgba(255,255,255,0.25)' },
+                { text: 'Back? ❌', color: '#ff4444' },
+              ].map((item, i) => (
+                <span
+                  key={i}
+                  style={{
+                    fontSize: 'clamp(10px,1.4vw,13px)',
+                    fontWeight: item.bold ? 900 : 500,
+                    color: item.color,
+                    letterSpacing: item.bold ? '0.08em' : 0,
+                  }}
+                >
+                  {item.text}
+                </span>
+              ))}
             </div>
-            <div style={{ fontSize: 'clamp(12px,1.6vw,15px)', color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>
-              {band.description}
+
+            {metrics.scoutedChildren > 0 && (
+              <div style={{ fontSize: 'clamp(11px,1.4vw,13px)', color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
+                ~{metrics.scoutedChildren.toLocaleString()} children are scouted from developing nations for every match like this played
+              </div>
+            )}
+
+            <div style={{ fontSize: 'clamp(10px,1.3vw,12px)', color: 'rgba(255,255,255,0.35)', lineHeight: 1.6 }}>
+              FIFA distributes ~6% of World Cup revenue to football development globally. The other 94% stays in European football's financial ecosystem.
             </div>
-          </div>
+
+            <div style={{ fontSize: 'clamp(8px,1.1vw,10px)', color: 'rgba(255,255,255,0.18)', marginTop: 4, fontStyle: 'italic' }}>
+              Estimates based on CIES Football Observatory, FIFA Financial Report 2022, UEFA HatTrick Programme data
+            </div>
+          </MetricCard>
+
         </div>
 
         {/* ── F. Biggest lever hint ── */}
@@ -581,9 +815,9 @@ export default function ImpactPanel() {
                 textTransform: 'uppercase',
               }}
             >
-              BIGGEST IMPACT:
+              BIGGEST LEVER:
               <span style={{ color: '#ffdd00', marginLeft: 6 }}>
-                {biggest.name} — {biggest.value.toFixed(1)}° of your {score.toFixed(1)}° total
+                {biggest.name} — {biggest.value.toFixed(1)} of {metrics.extractionIndex.toFixed(1)} extraction points
               </span>
             </span>
           </div>
@@ -595,7 +829,7 @@ export default function ImpactPanel() {
           <div style={{ display: 'flex', gap: 4, marginTop: 4, paddingLeft: 28 }}>
             {levers.map((l, i) => {
               const colors = ['#00ff88', '#ffaa00', '#00d4ff', '#ff6b35'];
-              const w = score > 0 ? (l.value / score) * 100 : 0;
+              const w = metrics.extractionIndex > 0 ? (l.value / metrics.extractionIndex) * 100 : 0;
               return (
                 <div key={l.name} style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: `${Math.max(w, 2)} 0 0` }}>
                   <div
@@ -608,7 +842,7 @@ export default function ImpactPanel() {
                     }}
                   />
                   <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', fontWeight: 700, letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
-                    {l.name.slice(0, 3).toUpperCase()} {l.value.toFixed(0)}°
+                    {l.name.slice(0, 3).toUpperCase()} {l.value.toFixed(0)}
                   </div>
                 </div>
               );
@@ -626,11 +860,11 @@ export default function ImpactPanel() {
             paddingBottom: 16,
           }}
         >
-          FAIRPLAY · The Modern Colosseum · Methodology based on DEFRA transport emission factors
+          FAIRPLAY · The Modern Colosseum · Methodology based on DEFRA transport emission factors · CIES Football Observatory · FIFA Financial Reports
         </div>
       </div>
 
-      {/* Slider thumb global override — injected once */}
+      {/* Slider thumb global override */}
       <style>{`
         input[type=range]::-webkit-slider-thumb {
           appearance: none;
@@ -654,5 +888,3 @@ export default function ImpactPanel() {
     </div>
   );
 }
-
-
