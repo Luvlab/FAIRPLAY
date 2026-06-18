@@ -275,7 +275,11 @@ export default function LeaguesPanel() {
   const setActiveTab   = useGameStore((s) => s.setActiveTab);
   const setImpactGame  = useGameStore((s) => s.setImpactGame);
 
-  const [view, setView]               = useState<MainView>('world');
+  const [view, setView]               = useState<MainView>(() => {
+    const intent = sessionStorage.getItem('fp_welcome_view') as MainView | null;
+    if (intent) { sessionStorage.removeItem('fp_welcome_view'); return intent; }
+    return 'world';
+  });
   const [selectedLeague, setSelected] = useState<LeagueInfo | null>(null);
   const [region, setRegion]           = useState('All');
   const [search, setSearch]           = useState('');
