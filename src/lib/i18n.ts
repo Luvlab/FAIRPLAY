@@ -116,6 +116,17 @@ const en = {
   createMatchBtn: '⚽ START MATCH',
   homeTeamPlaceholder: 'e.g. Home FC',
   awayTeamPlaceholder: 'e.g. Away United',
+
+  // Welcome screen entry paths
+  welcomeChoose: 'How do you want to start?',
+  welcomeUpcoming: 'UPCOMING GAME',
+  welcomeUpcomingDesc: "Browse today's fixtures and follow along from kick-off",
+  welcomeLiveNow: 'LIVE NOW',
+  welcomeLiveActive: '{count} matches in play right now — jump in',
+  welcomeLiveEmpty: 'Jump into a match already in progress',
+  welcomeYourLeague: 'YOUR OWN LEAGUE',
+  welcomeYourLeagueDesc: 'Add your club, create a match, referee it yourself with friends',
+  welcomeSubtags: 'LIVE CALLS · COMPARE · IMPACT · COMMUNITY',
 } as const;
 
 export type Translations = { [K in keyof typeof en]: string };
@@ -210,6 +221,15 @@ const es: Translations = {
   createMatchBtn: '⚽ INICIAR PARTIDO',
   homeTeamPlaceholder: 'p. ej. Local FC',
   awayTeamPlaceholder: 'p. ej. Visitante United',
+  welcomeChoose: '¿Cómo quieres empezar?',
+  welcomeUpcoming: 'PRÓXIMO PARTIDO',
+  welcomeUpcomingDesc: 'Explora los partidos de hoy y síguelos desde el pitido inicial',
+  welcomeLiveNow: 'EN VIVO',
+  welcomeLiveActive: '{count} partido(s) en juego ahora — únete',
+  welcomeLiveEmpty: 'Únete a un partido ya en progreso',
+  welcomeYourLeague: 'TU PROPIA LIGA',
+  welcomeYourLeagueDesc: 'Añade tu club, crea un partido, arbitralo tú mismo con amigos',
+  welcomeSubtags: 'EN VIVO · COMPARAR · IMPACTO · COMUNIDAD',
 };
 
 const pt: Translations = {
@@ -298,6 +318,15 @@ const pt: Translations = {
   createMatchBtn: '⚽ INICIAR PARTIDA',
   homeTeamPlaceholder: 'ex. Casa FC',
   awayTeamPlaceholder: 'ex. Visitante United',
+  welcomeChoose: 'Como você quer começar?',
+  welcomeUpcoming: 'PRÓXIMO JOGO',
+  welcomeUpcomingDesc: 'Veja os jogos de hoje e acompanhe desde o início',
+  welcomeLiveNow: 'AO VIVO',
+  welcomeLiveActive: '{count} jogo(s) em andamento — participe',
+  welcomeLiveEmpty: 'Entre em um jogo já em andamento',
+  welcomeYourLeague: 'SUA PRÓPRIA LIGA',
+  welcomeYourLeagueDesc: 'Adicione seu clube, crie uma partida, arbitre com amigos',
+  welcomeSubtags: 'AO VIVO · COMPARAR · IMPACTO · COMUNIDADE',
 };
 
 const de: Translations = {
@@ -386,6 +415,15 @@ const de: Translations = {
   createMatchBtn: '⚽ SPIEL STARTEN',
   homeTeamPlaceholder: 'z. B. Heim FC',
   awayTeamPlaceholder: 'z. B. Gast United',
+  welcomeChoose: 'Wie möchten Sie beginnen?',
+  welcomeUpcoming: 'NÄCHSTES SPIEL',
+  welcomeUpcomingDesc: "Heute's Spiele durchsuchen und vom Anstoß an verfolgen",
+  welcomeLiveNow: 'JETZT LIVE',
+  welcomeLiveActive: '{count} Spiel(e) laufen gerade — mitmachen',
+  welcomeLiveEmpty: 'Einem laufenden Spiel beitreten',
+  welcomeYourLeague: 'EIGENE LIGA',
+  welcomeYourLeagueDesc: 'Verein hinzufügen, Spiel erstellen, selbst pfeifen',
+  welcomeSubtags: 'LIVE · VERGLEICH · WIRKUNG · GEMEINSCHAFT',
 };
 
 const fr: Translations = {
@@ -474,6 +512,15 @@ const fr: Translations = {
   createMatchBtn: '⚽ DÉMARRER LE MATCH',
   homeTeamPlaceholder: 'ex. Domicile FC',
   awayTeamPlaceholder: 'ex. Visiteur United',
+  welcomeChoose: 'Comment voulez-vous commencer ?',
+  welcomeUpcoming: 'PROCHAIN MATCH',
+  welcomeUpcomingDesc: "Parcourez les matchs d'aujourd'hui et suivez depuis le coup d'envoi",
+  welcomeLiveNow: 'EN DIRECT',
+  welcomeLiveActive: '{count} match(s) en cours — rejoignez',
+  welcomeLiveEmpty: 'Rejoignez un match déjà en cours',
+  welcomeYourLeague: 'VOTRE LIGUE',
+  welcomeYourLeagueDesc: 'Ajoutez votre club, créez un match, arbitrez avec vos amis',
+  welcomeSubtags: 'EN DIRECT · COMPARER · IMPACT · COMMUNAUTÉ',
 };
 
 const it: Translations = {
@@ -562,6 +609,15 @@ const it: Translations = {
   createMatchBtn: '⚽ AVVIA PARTITA',
   homeTeamPlaceholder: 'es. Casa FC',
   awayTeamPlaceholder: 'es. Ospite United',
+  welcomeChoose: 'Come vuoi iniziare?',
+  welcomeUpcoming: 'PROSSIMA PARTITA',
+  welcomeUpcomingDesc: "Sfoglia le partite di oggi e segui dall'inizio",
+  welcomeLiveNow: 'ORA IN DIRETTA',
+  welcomeLiveActive: '{count} partita/e in corso — partecipa',
+  welcomeLiveEmpty: 'Unisciti a una partita già in corso',
+  welcomeYourLeague: 'LA TUA LEGA',
+  welcomeYourLeagueDesc: 'Aggiungi il tuo club, crea una partita, arbitrala con gli amici',
+  welcomeSubtags: 'IN DIRETTA · CONFRONTA · IMPATTO · COMUNITÀ',
 };
 
 const nl: Translations = {
@@ -650,6 +706,15 @@ const nl: Translations = {
   createMatchBtn: '⚽ WEDSTRIJD STARTEN',
   homeTeamPlaceholder: 'bijv. Thuis FC',
   awayTeamPlaceholder: 'bijv. Uit United',
+  welcomeChoose: 'Hoe wil je beginnen?',
+  welcomeUpcoming: 'AANKOMENDE WEDSTRIJD',
+  welcomeUpcomingDesc: 'Bekijk de wedstrijden van vandaag en volg vanaf de aftrap',
+  welcomeLiveNow: 'NU LIVE',
+  welcomeLiveActive: '{count} wedstrijd(en) nu bezig — doe mee',
+  welcomeLiveEmpty: 'Doe mee met een wedstrijd die al bezig is',
+  welcomeYourLeague: 'JOUW LIGA',
+  welcomeYourLeagueDesc: 'Voeg je club toe, maak een wedstrijd, wees de scheidsrechter',
+  welcomeSubtags: 'LIVE · VERGELIJK · IMPACT · GEMEENSCHAP',
 };
 
 const ar: Translations = {
@@ -738,6 +803,15 @@ const ar: Translations = {
   createMatchBtn: '⚽ ابدأ المباراة',
   homeTeamPlaceholder: 'مثال: المضيف FC',
   awayTeamPlaceholder: 'مثال: الضيف United',
+  welcomeChoose: 'كيف تريد أن تبدأ؟',
+  welcomeUpcoming: 'مباراة قادمة',
+  welcomeUpcomingDesc: 'تصفح مباريات اليوم وتابع من البداية',
+  welcomeLiveNow: 'الآن مباشرة',
+  welcomeLiveActive: '{count} مباراة تُلعب الآن — انضم',
+  welcomeLiveEmpty: 'انضم إلى مباراة جارية',
+  welcomeYourLeague: 'دوريك الخاص',
+  welcomeYourLeagueDesc: 'أضف ناديك، أنشئ مباراة، احكم بنفسك مع الأصدقاء',
+  welcomeSubtags: 'مباشر · مقارنة · تأثير · مجتمع',
 };
 
 const ja: Translations = {
@@ -826,6 +900,15 @@ const ja: Translations = {
   createMatchBtn: '⚽ 試合開始',
   homeTeamPlaceholder: '例: ホームFC',
   awayTeamPlaceholder: '例: アウェイUnited',
+  welcomeChoose: 'どこから始めますか？',
+  welcomeUpcoming: '次の試合',
+  welcomeUpcomingDesc: '今日の試合を確認してキックオフから参加',
+  welcomeLiveNow: 'ライブ中',
+  welcomeLiveActive: '現在{count}試合進行中 — 参加する',
+  welcomeLiveEmpty: '進行中の試合に参加する',
+  welcomeYourLeague: 'あなたのリーグ',
+  welcomeYourLeagueDesc: 'クラブを追加して試合を作成、友達と一緒に審判',
+  welcomeSubtags: 'ライブ · 比較 · インパクト · コミュニティ',
 };
 
 const ko: Translations = {
@@ -914,6 +997,15 @@ const ko: Translations = {
   createMatchBtn: '⚽ 경기 시작',
   homeTeamPlaceholder: '예: 홈 FC',
   awayTeamPlaceholder: '예: 원정 United',
+  welcomeChoose: '어떻게 시작하시겠어요?',
+  welcomeUpcoming: '예정 경기',
+  welcomeUpcomingDesc: '오늘의 경기를 찾아보고 킥오프부터 따라가세요',
+  welcomeLiveNow: '지금 라이브',
+  welcomeLiveActive: '현재 {count}경기 진행 중 — 참여하기',
+  welcomeLiveEmpty: '이미 진행 중인 경기에 참여하기',
+  welcomeYourLeague: '나만의 리그',
+  welcomeYourLeagueDesc: '클럽 추가, 경기 생성, 친구들과 직접 심판',
+  welcomeSubtags: '라이브 · 비교 · 영향 · 커뮤니티',
 };
 
 const zh: Translations = {
@@ -1002,6 +1094,15 @@ const zh: Translations = {
   createMatchBtn: '⚽ 开始比赛',
   homeTeamPlaceholder: '例如：主队FC',
   awayTeamPlaceholder: '例如：客队United',
+  welcomeChoose: '你想怎么开始？',
+  welcomeUpcoming: '即将开始',
+  welcomeUpcomingDesc: '浏览今日赛程，从开球起跟进',
+  welcomeLiveNow: '正在直播',
+  welcomeLiveActive: '现在{count}场比赛进行中 — 加入',
+  welcomeLiveEmpty: '加入已经进行中的比赛',
+  welcomeYourLeague: '你的联赛',
+  welcomeYourLeagueDesc: '添加你的俱乐部，创建比赛，亲自裁判',
+  welcomeSubtags: '直播 · 对比 · 影响 · 社区',
 };
 
 const ru: Translations = {
@@ -1090,6 +1191,15 @@ const ru: Translations = {
   createMatchBtn: '⚽ НАЧАТЬ МАТЧ',
   homeTeamPlaceholder: 'напр. Домашние FC',
   awayTeamPlaceholder: 'напр. Гостевые United',
+  welcomeChoose: 'С чего хотите начать?',
+  welcomeUpcoming: 'БЛИЖАЙШИЙ МАТЧ',
+  welcomeUpcomingDesc: 'Просмотр матчей сегодня и отслеживание с начала',
+  welcomeLiveNow: 'СЕЙЧАС В ЭФИРЕ',
+  welcomeLiveActive: '{count} матч(а) идёт сейчас — присоединиться',
+  welcomeLiveEmpty: 'Присоединиться к уже идущему матчу',
+  welcomeYourLeague: 'ВАШ КЛУБ',
+  welcomeYourLeagueDesc: 'Добавьте клуб, создайте матч, судите с друзьями',
+  welcomeSubtags: 'ПРЯМОЙ ЭФИР · СРАВНЕНИЕ · ВОЗДЕЙСТВИЕ · СООБЩЕСТВО',
 };
 
 const tr: Translations = {
@@ -1178,6 +1288,15 @@ const tr: Translations = {
   createMatchBtn: '⚽ MAÇI BAŞLAT',
   homeTeamPlaceholder: 'örn. Ev FC',
   awayTeamPlaceholder: 'örn. Deplasman United',
+  welcomeChoose: 'Nasıl başlamak istersiniz?',
+  welcomeUpcoming: 'YAKLAŞAN MAÇ',
+  welcomeUpcomingDesc: "Bugünün maçlarına göz atın ve başlangıçtan takip edin",
+  welcomeLiveNow: 'ŞU AN CANLI',
+  welcomeLiveActive: 'Şu anda {count} maç var — katıl',
+  welcomeLiveEmpty: 'Devam eden bir maça katıl',
+  welcomeYourLeague: 'KENDİ LİGİN',
+  welcomeYourLeagueDesc: 'Kulübünü ekle, maç oluştur, arkadaşlarınla hakemlik yap',
+  welcomeSubtags: 'CANLI · KARŞILAŞTIR · ETKİ · TOPLULUK',
 };
 
 const pl: Translations = {
@@ -1266,6 +1385,15 @@ const pl: Translations = {
   createMatchBtn: '⚽ ROZPOCZNIJ MECZ',
   homeTeamPlaceholder: 'np. Gospodarze FC',
   awayTeamPlaceholder: 'np. Goście United',
+  welcomeChoose: 'Jak chcesz zacząć?',
+  welcomeUpcoming: 'NADCHODZĄCY MECZ',
+  welcomeUpcomingDesc: 'Przeglądaj dzisiejsze mecze i śledź od pierwszego gwizdka',
+  welcomeLiveNow: 'TERAZ NA ŻYWO',
+  welcomeLiveActive: '{count} mecz(e) trwa teraz — dołącz',
+  welcomeLiveEmpty: 'Dołącz do trwającego meczu',
+  welcomeYourLeague: 'TWOJA LIGA',
+  welcomeYourLeagueDesc: 'Dodaj swój klub, utwórz mecz, sędziuj z przyjaciółmi',
+  welcomeSubtags: 'NA ŻYWO · PORÓWNAJ · WPŁYW · SPOŁECZNOŚĆ',
 };
 
 const sv: Translations = {
@@ -1354,6 +1482,15 @@ const sv: Translations = {
   createMatchBtn: '⚽ STARTA MATCH',
   homeTeamPlaceholder: 't.ex. Hemma FC',
   awayTeamPlaceholder: 't.ex. Borta United',
+  welcomeChoose: 'Hur vill du börja?',
+  welcomeUpcoming: 'KOMMANDE MATCH',
+  welcomeUpcomingDesc: 'Bläddra bland dagens matcher och följ från avspark',
+  welcomeLiveNow: 'LIVE NU',
+  welcomeLiveActive: '{count} match(er) pågår nu — hoppa in',
+  welcomeLiveEmpty: 'Gå med i en match som redan pågår',
+  welcomeYourLeague: 'DIN LIGA',
+  welcomeYourLeagueDesc: 'Lägg till din klubb, skapa en match, döm med vänner',
+  welcomeSubtags: 'LIVE · JÄMFÖR · PÅVERKAN · GEMENSKAP',
 };
 
 const da: Translations = {
@@ -1442,6 +1579,15 @@ const da: Translations = {
   createMatchBtn: '⚽ START KAMP',
   homeTeamPlaceholder: 'f.eks. Hjemme FC',
   awayTeamPlaceholder: 'f.eks. Ude United',
+  welcomeChoose: 'Hvordan vil du starte?',
+  welcomeUpcoming: 'KOMMENDE KAMP',
+  welcomeUpcomingDesc: 'Gennemse dagens kampe og følg fra kick-off',
+  welcomeLiveNow: 'LIVE NU',
+  welcomeLiveActive: '{count} kamp(e) i gang nu — hop ind',
+  welcomeLiveEmpty: 'Tilslut dig en kamp der allerede er i gang',
+  welcomeYourLeague: 'DIN LIGA',
+  welcomeYourLeagueDesc: 'Tilføj din klub, opret en kamp, vær dommer med venner',
+  welcomeSubtags: 'LIVE · SAMMENLIGN · EFFEKT · FÆLLESSKAB',
 };
 
 const nb: Translations = {
@@ -1530,6 +1676,15 @@ const nb: Translations = {
   createMatchBtn: '⚽ START KAMP',
   homeTeamPlaceholder: 'f.eks. Hjemme FC',
   awayTeamPlaceholder: 'f.eks. Borte United',
+  welcomeChoose: 'Hvordan vil du starte?',
+  welcomeUpcoming: 'KOMMENDE KAMP',
+  welcomeUpcomingDesc: 'Bla gjennom dagens kamper og følg fra avspark',
+  welcomeLiveNow: 'LIVE NÅ',
+  welcomeLiveActive: '{count} kamp(er) pågår nå — hopp inn',
+  welcomeLiveEmpty: 'Bli med i en kamp som allerede pågår',
+  welcomeYourLeague: 'DIN LIGA',
+  welcomeYourLeagueDesc: 'Legg til klubben din, opprett kamp, døm med venner',
+  welcomeSubtags: 'LIVE · SAMMENLIGN · VIRKNING · FELLESSKAP',
 };
 
 const hi: Translations = {
@@ -1618,6 +1773,15 @@ const hi: Translations = {
   createMatchBtn: '⚽ मैच शुरू करें',
   homeTeamPlaceholder: 'उदा. होम FC',
   awayTeamPlaceholder: 'उदा. अवे United',
+  welcomeChoose: 'आप कैसे शुरू करना चाहते हैं?',
+  welcomeUpcoming: 'आगामी मैच',
+  welcomeUpcomingDesc: 'आज के मैच देखें और किकऑफ से फॉलो करें',
+  welcomeLiveNow: 'अभी लाइव',
+  welcomeLiveActive: 'अभी {count} मैच चल रहे हैं — शामिल हों',
+  welcomeLiveEmpty: 'पहले से चल रहे मैच में शामिल हों',
+  welcomeYourLeague: 'आपकी लीग',
+  welcomeYourLeagueDesc: 'अपना क्लब जोड़ें, मैच बनाएं, दोस्तों के साथ रेफरी करें',
+  welcomeSubtags: 'लाइव · तुलना · प्रभाव · समुदाय',
 };
 
 const id: Translations = {
@@ -1706,6 +1870,15 @@ const id: Translations = {
   createMatchBtn: '⚽ MULAI PERTANDINGAN',
   homeTeamPlaceholder: 'mis. Tuan Rumah FC',
   awayTeamPlaceholder: 'mis. Tamu United',
+  welcomeChoose: 'Bagaimana ingin memulai?',
+  welcomeUpcoming: 'PERTANDINGAN MENDATANG',
+  welcomeUpcomingDesc: 'Jelajahi pertandingan hari ini dan ikuti dari awal',
+  welcomeLiveNow: 'LIVE SEKARANG',
+  welcomeLiveActive: '{count} pertandingan sedang berlangsung — bergabung',
+  welcomeLiveEmpty: 'Bergabung dengan pertandingan yang sudah berlangsung',
+  welcomeYourLeague: 'LIGA ANDA',
+  welcomeYourLeagueDesc: 'Tambahkan klub, buat pertandingan, wasiti sendiri bersama teman',
+  welcomeSubtags: 'LANGSUNG · BANDINGKAN · DAMPAK · KOMUNITAS',
 };
 
 const th: Translations = {
@@ -1794,6 +1967,15 @@ const th: Translations = {
   createMatchBtn: '⚽ เริ่มแมตช์',
   homeTeamPlaceholder: 'เช่น เจ้าบ้าน FC',
   awayTeamPlaceholder: 'เช่น เยือน United',
+  welcomeChoose: 'คุณต้องการเริ่มอย่างไร?',
+  welcomeUpcoming: 'แมตช์ที่กำลังจะมาถึง',
+  welcomeUpcomingDesc: 'ดูตารางแมตช์วันนี้และติดตามตั้งแต่เริ่มเตะ',
+  welcomeLiveNow: 'สดอยู่ตอนนี้',
+  welcomeLiveActive: 'มี {count} แมตช์ดำเนินอยู่ตอนนี้ — เข้าร่วม',
+  welcomeLiveEmpty: 'เข้าร่วมแมตช์ที่กำลังดำเนินอยู่',
+  welcomeYourLeague: 'ลีกของคุณ',
+  welcomeYourLeagueDesc: 'เพิ่มสโมสรของคุณ สร้างแมตช์ ตัดสินเองกับเพื่อน',
+  welcomeSubtags: 'สด · เปรียบเทียบ · ผลกระทบ · ชุมชน',
 };
 
 // ---------------------------------------------------------------------------

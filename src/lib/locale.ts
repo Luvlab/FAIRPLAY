@@ -1,9 +1,19 @@
 /**
  * Detects the user's preferred language.
- * Priority: localStorage cache → IP geolocation (ipapi.co) → navigator.language → 'en'
+ * Priority: manual user pick (never expires) → fresh IP geo (TTL 12h) → navigator.language → 'fr'
+ *
+ * Storage format: JSON  { lang: string, ts: number, manual?: true }
+ * Old plain-string format is treated as expired so IP detection re-runs.
  */
 
 const STORAGE_KEY = 'fp_locale';
+const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
+
+interface LocaleCache {
+  lang: string;
+  ts: number;
+  manual?: boolean; // true = user explicitly chose this; never override with geo
+}
 
 /** Best-effort country→language map for IP geo fallback */
 const COUNTRY_LANG: Record<string, string> = {
@@ -19,7 +29,9 @@ const COUNTRY_LANG: Record<string, string> = {
   // German
   DE: 'de', AT: 'de',
   // French
-  FR: 'fr', LU: 'fr', MC: 'fr', SN: 'fr', CI: 'fr', CM: 'fr',
+  FR: 'fr', LU: 'fr', MC: 'fr', SN: 'fr', CI: 'fr', CM: 'fr', BF: 'fr',
+  ML: 'fr', NE: 'fr', TD: 'fr', CF: 'fr', CG: 'fr', CD: 'fr', GA: 'fr',
+  GN: 'fr', TG: 'fr', BJ: 'fr', MG: 'fr', HT: 'fr', CH: 'fr',
   // Italian
   IT: 'it',
   // Dutch
@@ -64,12 +76,58 @@ function navLang(): string {
   return baseLang(navigator.language.toLowerCase());
 }
 
-export async function detectLocale(): Promise<string> {
-  // Return cached value immediately
-  const cached = localStorage.getItem(STORAGE_KEY);
-  if (cached) return cached;
+// ── Cache read/write ──────────────────────────────────────────────────────────
 
-  // Try IP geolocation first
+function readCache(): LocaleCache | null {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    // Must be an object with a string `lang` field (new format)
+    if (parsed && typeof parsed === 'object' && typeof parsed.lang === 'string') {
+      return parsed as LocaleCache;
+    }
+    // Old plain-string format (e.g. stored "en" without JSON) → expired
+    return null;
+  } catch {
+    // Not valid JSON at all → expired
+    return null;
+  }
+}
+
+function writeCache(lang: string, manual = false): void {
+  const cache: LocaleCache = { lang, ts: Date.now(), manual };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
+}
+
+// ── Public API ────────────────────────────────────────────────────────────────
+
+/**
+ * Synchronously return whatever language is cached (for immediate first render).
+ * Returns 'fr' by default until geo detection resolves.
+ */
+export function getCachedLocale(): string {
+  return readCache()?.lang ?? 'fr';
+}
+
+/**
+ * Detect the user's locale. Called once on app mount.
+ *
+ * - Manual pick → returned immediately, never overridden by geo.
+ * - Auto-detected + fresh (< 12 h) → returned immediately.
+ * - Stale, missing, or old plain-string format → IP geo round-trip, then stored.
+ */
+export async function detectLocale(): Promise<string> {
+  const c = readCache();
+
+  // Always respect a deliberate manual selection
+  if (c?.manual) return c.lang;
+
+  // Use a recent auto-detected value without hitting the network
+  if (c && Date.now() - c.ts < CACHE_TTL_MS) return c.lang;
+
+  // Cache is missing, stale (> 12 h), or in the old plain-string format
+  // → ask ipapi.co for the current country
   try {
     const res = await fetch('https://ipapi.co/json/', {
       signal: AbortSignal.timeout(3500),
@@ -78,27 +136,30 @@ export async function detectLocale(): Promise<string> {
       const data = await res.json() as { country_code?: string };
       const cc = data.country_code ?? '';
       const lang = COUNTRY_LANG[cc.toUpperCase()] ?? navLang();
-      localStorage.setItem(STORAGE_KEY, lang);
+      writeCache(lang, false);
       return lang;
     }
   } catch {
-    // Network blocked, CORS issue, timeout — fall through
+    // Timeout, CORS block, or network error — fall back to browser language
   }
 
-  // Fall back to browser language
   const lang = navLang();
-  localStorage.setItem(STORAGE_KEY, lang);
+  writeCache(lang, false);
   return lang;
 }
 
-/** Synchronously read whatever's already cached (for immediate first render).
- *  Defaults to French until geo detection resolves. */
-export function getCachedLocale(): string {
-  return localStorage.getItem(STORAGE_KEY) ?? 'fr';
+/**
+ * Store a language chosen explicitly by the user.
+ * Marked `manual: true` — detectLocale() will never override it with geo.
+ */
+export function setManualLocale(lang: string): void {
+  writeCache(lang, true);
 }
 
-/** Clear the cache and force a fresh IP geo-detection round-trip.
- *  Call this when the user taps "Auto-detect language". */
+/**
+ * Clear the cache and force a fresh IP geo-detection round-trip.
+ * Called when the user taps "Auto-detect language" in LanguagePicker.
+ */
 export async function resetAndDetectLocale(): Promise<string> {
   localStorage.removeItem(STORAGE_KEY);
   return detectLocale();

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
+import { useT } from '../context/I18nContext';
 
 interface Props { onEnter: () => void }
 
 export default function WelcomeScreen({ onEnter }: Props) {
+  const t = useT();
   const setActiveTab   = useGameStore((s) => s.setActiveTab);
   const liveMatchCount = useGameStore((s) => s.liveMatchCount);
   const openAuthModal  = useGameStore((s) => s.openAuthModal);
@@ -111,7 +113,7 @@ export default function WelcomeScreen({ onEnter }: Props) {
             color: 'rgba(255,255,255,0.45)',
             letterSpacing: '0.06em',
           }}>
-            The referee engine for the beautiful game
+            {t.welcomeTagline.replace('{sport}', t.sport)}
           </div>
           <div style={{
             marginTop: 6,
@@ -120,7 +122,7 @@ export default function WelcomeScreen({ onEnter }: Props) {
             letterSpacing: '0.1em',
             fontWeight: 600,
           }}>
-            LIVE CALLS · COMPARE · IMPACT · COMMUNITY
+            {t.welcomeSubtags}
           </div>
         </div>
 
@@ -133,7 +135,7 @@ export default function WelcomeScreen({ onEnter }: Props) {
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
           }}>
-            How do you want to start?
+            {t.welcomeChoose}
           </div>
         </div>
 
@@ -169,12 +171,12 @@ export default function WelcomeScreen({ onEnter }: Props) {
               <div style={{
                 fontWeight: 900, fontSize: 'clamp(14px,2.5vw,18px)',
                 color: '#00d4ff', letterSpacing: '0.04em', marginBottom: 4,
-              }}>UPCOMING GAME</div>
+              }}>{t.welcomeUpcoming}</div>
               <div style={{
                 fontSize: 'clamp(11px,1.6vw,13px)',
                 color: 'rgba(255,255,255,0.45)', lineHeight: 1.4,
               }}>
-                Browse today's fixtures and follow along from kick-off
+                {t.welcomeUpcomingDesc}
               </div>
             </div>
             <div style={{ color: 'rgba(0,212,255,0.4)', fontSize: 20, flexShrink: 0 }}>›</div>
@@ -221,7 +223,7 @@ export default function WelcomeScreen({ onEnter }: Props) {
                 color: '#ff5555', letterSpacing: '0.04em', marginBottom: 4,
                 display: 'flex', alignItems: 'center', gap: 8,
               }}>
-                LIVE NOW
+                {t.welcomeLiveNow}
                 {liveMatchCount > 0 && (
                   <span style={{
                     fontSize: 10, fontWeight: 700,
@@ -238,8 +240,8 @@ export default function WelcomeScreen({ onEnter }: Props) {
                 color: 'rgba(255,255,255,0.45)', lineHeight: 1.4,
               }}>
                 {liveMatchCount > 0
-                  ? `${liveMatchCount} match${liveMatchCount > 1 ? 'es' : ''} in play right now — jump in`
-                  : 'Jump into a match already in progress'}
+                  ? t.welcomeLiveActive.replace('{count}', String(liveMatchCount))
+                  : t.welcomeLiveEmpty}
               </div>
             </div>
             <div style={{ color: 'rgba(255,85,85,0.4)', fontSize: 20, flexShrink: 0 }}>›</div>
@@ -269,12 +271,12 @@ export default function WelcomeScreen({ onEnter }: Props) {
               <div style={{
                 fontWeight: 900, fontSize: 'clamp(14px,2.5vw,18px)',
                 color: '#00ff88', letterSpacing: '0.04em', marginBottom: 4,
-              }}>YOUR OWN LEAGUE</div>
+              }}>{t.welcomeYourLeague}</div>
               <div style={{
                 fontSize: 'clamp(11px,1.6vw,13px)',
                 color: 'rgba(255,255,255,0.45)', lineHeight: 1.4,
               }}>
-                Add your club, create a match, referee it yourself with friends
+                {t.welcomeYourLeagueDesc}
               </div>
             </div>
             <div style={{ color: 'rgba(0,255,136,0.4)', fontSize: 20, flexShrink: 0 }}>›</div>
@@ -331,10 +333,10 @@ export default function WelcomeScreen({ onEnter }: Props) {
             }}
             onClick={() => { onEnter(); setTimeout(() => openAuthModal('register'), 300); }}
           >
-            Create free account →
+            {t.signUpFree}
           </button>
           <div style={{ fontSize: 'clamp(9px,1.2vw,11px)', color: 'rgba(255,255,255,0.18)' }}>
-            No account required · Works on any device · Free forever
+            {t.noAccount}
           </div>
         </div>
 

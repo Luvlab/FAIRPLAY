@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { getTranslations, type Translations } from '../lib/i18n';
-import { detectLocale, getCachedLocale } from '../lib/locale';
+import { detectLocale, getCachedLocale, setManualLocale } from '../lib/locale';
 
 interface I18nCtx {
   t: Translations;
@@ -27,7 +27,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setLang = (l: string) => {
-    localStorage.setItem('fp_locale', l);
+    setManualLocale(l);          // stores as { lang, ts, manual: true }
     setLangState(l);
     setT(getTranslations(l));
   };
