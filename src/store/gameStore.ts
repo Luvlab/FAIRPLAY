@@ -194,7 +194,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   selectedCall: null,
   cardType: null,
   showCard: false,
-  activeTab: 'referee',
+  activeTab: 'leagues',
   compareFilter: 'all',
   mediaItems: [],
   userCalls: [],

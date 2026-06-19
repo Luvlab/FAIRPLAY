@@ -31,8 +31,19 @@ interface BugItem {
 }
 
 export default function FeedbackButton() {
-  const userId = useGameStore((s) => s.userId);
+  const userId      = useGameStore((s) => s.userId);
+  const activeTab   = useGameStore((s) => s.activeTab);
+  const currentGame = useGameStore((s) => s.currentGame);
 
+  // Only show after user has been in the app a while, and not on leagues/welcome views
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    // Appear after 30 seconds, and only if not on the opening leagues tab without a game
+    const t = setTimeout(() => setVisible(true), 30_000);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Also show immediately if triggered by event
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<Tab>('wishlist');
 
@@ -48,9 +59,9 @@ export default function FeedbackButton() {
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Listen for fairplay:openFeedback custom event
+  // Listen for fairplay:openFeedback custom event — also makes button visible immediately
   useEffect(() => {
-    const handler = () => setOpen(true);
+    const handler = () => { setVisible(true); setOpen(true); };
     window.addEventListener('fairplay:openFeedback', handler);
     return () => window.removeEventListener('fairplay:openFeedback', handler);
   }, []);
@@ -127,26 +138,32 @@ export default function FeedbackButton() {
     background: 'rgba(255,255,255,0.07)',
   };
 
+  // Hide on leagues tab when no game picked yet (the "start" state)
+  const shouldHide = !visible || (activeTab === 'leagues' && !currentGame);
+
   return (
     <>
-      {/* Floating trigger button */}
+      {/* Floating trigger button — quiet, no pulse, appears after 30s */}
       <button
-        className="call-btn pulse-glow"
+        className="call-btn"
         style={{
           position: 'fixed',
-          bottom: 80,
-          right: 16,
+          bottom: 88,
+          right: 14,
           zIndex: 40,
-          width: 48,
-          height: 48,
+          width: 36,
+          height: 36,
           borderRadius: '50%',
-          background: 'rgba(255,200,0,0.15)',
-          border: '1px solid rgba(255,200,0,0.3)',
-          color: '#ffc800',
-          fontSize: 22,
+          background: 'rgba(255,200,0,0.08)',
+          border: '1px solid rgba(255,200,0,0.18)',
+          color: 'rgba(255,200,0,0.55)',
+          fontSize: 16,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          opacity: shouldHide ? 0 : 1,
+          pointerEvents: shouldHide ? 'none' : 'auto',
+          transition: 'opacity 0.4s ease',
         }}
         onClick={() => setOpen(true)}
         title="Feedback & Wishlist"
