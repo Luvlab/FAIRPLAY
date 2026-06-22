@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <radialGradient id="ball" cx="38%" cy="33%" r="68%">
+      <stop offset="0%"   stop-color="#ffffff"/>
+      <stop offset="72%"  stop-color="#f0f0f0"/>
+      <stop offset="100%" stop-color="#d0d0d0"/>
+    </radialGradient>
+    <clipPath id="bc">
+      <circle cx="920" cy="315" r="240"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0d1117"/>
+  <!-- subtle top-left cyan wash -->
+  <rect width="600" height="400" fill="#001a28" opacity="0.6"/>
+  <!-- bottom-right green tint -->
+  <ellipse cx="1180" cy="610" rx="300" ry="200" fill="#001a12" opacity="0.5"/>
+
+  <!-- ── LEFT PANEL ──────────────────────────────────────────── -->
+
+  <!-- "⚽ FAIRPLAY" eyebrow -->
+  <text x="72" y="148"
+        font-family="Arial Black, Arial, sans-serif"
+        font-size="22" font-weight="900" fill="#00d4ff" opacity="0.5"
+        letter-spacing="5">FAIRPLAY</text>
+
+  <!-- Big headline -->
+  <text x="68" y="260"
+        font-family="Arial Black, Arial, sans-serif"
+        font-size="90" font-weight="900" fill="#00d4ff"
+        letter-spacing="-2">FAIRPLAY</text>
+
+  <!-- Tagline -->
+  <text x="70" y="316"
+        font-family="Arial, sans-serif"
+        font-size="26" font-weight="700"
+        fill="rgba(255,255,255,0.58)" letter-spacing="0.5">The referee engine for the beautiful game</text>
+
+  <!-- Accent bar -->
+  <rect x="70" y="344" width="52" height="4" rx="2" fill="#00d4ff" opacity="0.75"/>
+
+  <!-- Features -->
+  <text x="70" y="398" font-family="Arial, sans-serif" font-size="21" font-weight="600"
+        fill="rgba(255,255,255,0.48)">&#x1F3C5;  Live referee calls on any match</text>
+  <text x="70" y="438" font-family="Arial, sans-serif" font-size="21" font-weight="600"
+        fill="rgba(255,255,255,0.48)">&#x1F465;  Compare with fans worldwide</text>
+  <text x="70" y="478" font-family="Arial, sans-serif" font-size="21" font-weight="600"
+        fill="rgba(255,255,255,0.48)">&#x1F30D;  Every league — 20 languages</text>
+  <text x="70" y="518" font-family="Arial, sans-serif" font-size="21" font-weight="600"
+        fill="rgba(255,255,255,0.48)">&#x1F321;&#xFE0F;  Football&#x2019;s real cost on society</text>
+
+  <!-- Pill badges -->
+  <rect x="70"  y="552" width="114" height="32" rx="16"
+        fill="none" stroke="#00d4ff" stroke-width="1.3" opacity="0.45"/>
+  <text x="127" y="573" text-anchor="middle"
+        font-family="Arial Black, Arial, sans-serif" font-size="13" font-weight="900"
+        fill="#00d4ff" opacity="0.8" letter-spacing="1.5">FREE</text>
+
+  <rect x="198" y="552" width="148" height="32" rx="16"
+        fill="none" stroke="#00ff88" stroke-width="1.3" opacity="0.4"/>
+  <text x="272" y="573" text-anchor="middle"
+        font-family="Arial Black, Arial, sans-serif" font-size="13" font-weight="900"
+        fill="#00ff88" opacity="0.75" letter-spacing="1">20 LANGUAGES</text>
+
+  <rect x="360" y="552" width="128" height="32" rx="16"
+        fill="none" stroke="#ffc800" stroke-width="1.3" opacity="0.4"/>
+  <text x="424" y="573" text-anchor="middle"
+        font-family="Arial Black, Arial, sans-serif" font-size="13" font-weight="900"
+        fill="#ffc800" opacity="0.75" letter-spacing="1">PWA OFFLINE</text>
+
+  <!-- Separator -->
+  <line x1="618" y1="72" x2="618" y2="558"
+        stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+
+  <!-- ── RIGHT PANEL: Soccer ball ─────────────────────────────── -->
+
+  <!-- Glow halo rings -->
+  <circle cx="920" cy="315" r="260" fill="none" stroke="#00d4ff" stroke-width="1.5" opacity="0.10"/>
+  <circle cx="920" cy="315" r="280" fill="none" stroke="#00d4ff" stroke-width="1"   opacity="0.05"/>
+
+  <!-- Ball body -->
+  <circle cx="920" cy="315" r="240" fill="url(#ball)"/>
+
+  <!--
+    Soccer patches — all polygons inlined (no <use>) for sips compatibility.
+    Pentagon radius 90, 5-fold symmetry.
+
+    CENTER (920,315), tip up, no rotation:
+      (920,225) (1005,267) (971,361) (869,361) (835,267)
+
+    OUTER pentagon at 306° dir → center (1046,169), rotate 216°:
+      tip points at 126° (toward ball center)
+      Base pentagon (r=90, tip up) rotated 216° CW:
+        0,-90  → rot 216° → (90*sin216°, -90*cos216°)=(-52.9,72.7) → +offset
+        71.3,-23.1... let me recalculate for r=90:
+          P0(270°): (0,-90)
+          P1(342°): (85.5,-27.7)
+          P2(54°):  (52.9, 72.7)
+          P3(126°): (-52.9,72.7)
+          P4(198°): (-85.5,-27.7)
+        Rotated 216° CW: angle_new = angle_orig + 216°
+          P0: 270+216=486=126° → (90cos126°, 90sin126°) = (-52.9, 72.7) → (1046-52.9, 169+72.7) = (993,242)
+          P1: 342+216=558=198° → (90cos198°, 90sin198°) = (-85.5,-27.7) → (1046-85.5,169-27.7) = (961,141)
+          P2:  54+216=270° → (0,-90) → (1046,79)
+          P3: 126+216=342° → (85.5,-27.7) → (1132,141)
+          P4: 198+216=54°  → (52.9,72.7)  → (1099,242)
+        Points: 993,242 961,141 1046,79 1132,141 1099,242
+
+    OUTER at 18° dir → center (1120,387), rotate 288°:
+      P0: 270+288=558=198° → (-85.5,-27.7) → (1035,359)
+      P1: 342+288=630=270° → (0,-90)         → (1120,297)
+      P2: 54+288=342° → (85.5,-27.7)  → (1206,359)
+      P3: 126+288=54° → (52.9,72.7)   → (1173,460)
+      P4: 198+288=126° → (-52.9,72.7) → (1067,460)
+      Points: 1035,359 1120,297 1206,359 1173,460 1067,460
+
+    OUTER at 90° dir → center (920,514), rotate 0° (same as center, shift only):
+      (920,424) (1005,486) (971,580) (869,580) (835,486)
+
+    OUTER at 162° dir → center (720,387), rotate 72°:
+      P0: 270+72=342° → (85.5,-27.7) → (806,359)
+      P1: 342+72=54°  → (52.9,72.7)  → (773,460)
+      P2: 54+72=126°  → (-52.9,72.7) → (667,460)
+      P3: 126+72=198° → (-85.5,-27.7)→ (635,359)
+      P4: 198+72=270° → (0,-90)       → (720,297)
+      Points: 806,359 773,460 667,460 635,359 720,297
+
+    OUTER at 234° dir → center (794,169), rotate 144°:
+      P0: 270+144=54°  → (52.9,72.7)  → (847,242)
+      P1: 342+144=126° → (-52.9,72.7) → (741,242)
+      P2: 54+144=198°  → (-85.5,-27.7)→ (709,141)
+      P3: 126+144=270° → (0,-90)       → (794,79)
+      P4: 198+144=342° → (85.5,-27.7) → (880,141)
+      Points: 847,242 741,242 709,141 794,79 880,141
+  -->
+  <g fill="#111827" clip-path="url(#bc)">
+    <!-- Center -->
+    <polygon points="920,225 1005,267 971,361 869,361 835,267"/>
+    <!-- Upper-right (OC at 306°) -->
+    <polygon points="993,242 961,141 1046,79 1132,141 1099,242"/>
+    <!-- Right (OC at 18°) -->
+    <polygon points="1035,359 1120,297 1206,359 1173,460 1067,460"/>
+    <!-- Bottom (OC at 90°) -->
+    <polygon points="920,424 1005,486 971,580 869,580 835,486"/>
+    <!-- Left (OC at 162°) -->
+    <polygon points="806,359 773,460 667,460 635,359 720,297"/>
+    <!-- Upper-left (OC at 234°) -->
+    <polygon points="847,242 741,242 709,141 794,79 880,141"/>
+  </g>
+
+  <!-- Seam lines -->
+  <g stroke="#888" stroke-width="3" stroke-linecap="round" clip-path="url(#bc)" opacity="0.22">
+    <line x1="920" y1="225" x2="1046" y2="169"/>
+    <line x1="1005" y1="267" x2="1120" y2="387"/>
+    <line x1="971"  y1="361" x2="920"  y2="514"/>
+    <line x1="869"  y1="361" x2="720"  y2="387"/>
+    <line x1="835"  y1="267" x2="794"  y2="169"/>
+    <line x1="920"  y1="225" x2="794"  y2="169"/>
+  </g>
+
+  <!-- Brand ring -->
+  <circle cx="920" cy="315" r="240"
+          fill="none" stroke="#00d4ff" stroke-width="9" opacity="0.4"/>
+
+  <!-- Highlight -->
+  <ellipse cx="872" cy="228" rx="62" ry="35" fill="white" opacity="0.13"
+           transform="rotate(-28, 872, 228)"/>
+</svg>

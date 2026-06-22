@@ -14,6 +14,7 @@ import WelcomeScreen from './components/WelcomeScreen';
 import WhistlePicker from './components/WhistlePicker';
 import LanguagePicker from './components/LanguagePicker';
 import FeedbackButton from './components/FeedbackButton';
+import AdminPanel from './components/AdminPanel';
 import { useT, useLang } from './context/I18nContext';
 import { WHISTLE_TYPES } from './lib/whistle';
 
@@ -44,6 +45,7 @@ export default function App() {
   const [showGameSelector,  setShowGameSelector]  = useState(false);
   const [showWhistlePicker, setShowWhistlePicker] = useState(false);
   const [showLangPicker,    setShowLangPicker]    = useState(false);
+  const [showAdmin,         setShowAdmin]         = useState(false);
   const [welcomed, setWelcomed] = useState(() => !!localStorage.getItem('fp_welcomed'));
 
   if (!welcomed) {
@@ -199,6 +201,22 @@ export default function App() {
             ⚽ {t.sport.toUpperCase()}
           </div>
 
+          {/* Admin settings button — only when logged in */}
+          {userProfile && (
+            <button
+              className="call-btn flex items-center justify-center rounded-lg"
+              style={{
+                width: 'clamp(28px,3.5vw,34px)', height: 'clamp(28px,3.5vw,34px)',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: 'rgba(255,255,255,0.35)',
+                fontSize: 'clamp(13px,1.8vw,17px)',
+              }}
+              title="Admin settings"
+              onClick={() => setShowAdmin(true)}
+            >⚙️</button>
+          )}
+
           {/* Auth button */}
           <button
             className="call-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-bold"
@@ -315,6 +333,7 @@ export default function App() {
       {showGameSelector    && <GameSelector    onClose={() => setShowGameSelector(false)} />}
       {showWhistlePicker   && <WhistlePicker   onClose={() => setShowWhistlePicker(false)} />}
       {showLangPicker      && <LanguagePicker  onClose={() => setShowLangPicker(false)} />}
+      {showAdmin           && <AdminPanel      onClose={() => setShowAdmin(false)} />}
     </div>
   );
 }
