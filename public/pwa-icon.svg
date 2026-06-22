@@ -1,19 +1,80 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#0d1117"/>
-  <circle cx="256" cy="210" r="148" fill="white"/>
-  <!-- Soccer ball pentagons -->
-  <circle cx="256" cy="210" r="148" fill="white" stroke="#0d1117" stroke-width="8"/>
-  <!-- Center pentagon -->
-  <polygon points="256,165 295,193 280,238 232,238 217,193" fill="#0d1117"/>
-  <!-- Top pentagon -->
-  <polygon points="256,83 296,112 295,155 256,165 217,155 216,112" fill="#0d1117" opacity="0.15"/>
-  <!-- Side patches -->
-  <polygon points="368,155 394,193 380,235 340,240 316,205 330,163" fill="#0d1117" opacity="0.15"/>
-  <polygon points="144,155 118,193 132,235 172,240 196,205 182,163" fill="#0d1117" opacity="0.15"/>
-  <polygon points="370,258 392,305 363,340 320,330 310,285 340,258" fill="#0d1117" opacity="0.15"/>
-  <polygon points="142,258 120,305 149,340 192,330 202,285 172,258" fill="#0d1117" opacity="0.15"/>
-  <!-- Bottom text -->
-  <text x="256" y="420" font-family="Arial Black, Arial, sans-serif" font-size="56" font-weight="900" text-anchor="middle" fill="#00d4ff" letter-spacing="4">FAIRPLAY</text>
-  <!-- Cyan glow ring -->
-  <circle cx="256" cy="210" r="152" fill="none" stroke="#00d4ff" stroke-width="4" opacity="0.5"/>
+
+  <!-- Dark navy rounded-square background (iOS-style app icon) -->
+  <rect width="512" height="512" rx="108" fill="#0d1117"/>
+
+  <defs>
+    <!-- Subtle sphere shading: brighter top-left, dimmer bottom-right -->
+    <radialGradient id="ball" cx="38%" cy="33%" r="68%">
+      <stop offset="0%"   stop-color="#ffffff"/>
+      <stop offset="72%"  stop-color="#f0f0f0"/>
+      <stop offset="100%" stop-color="#d4d4d4"/>
+    </radialGradient>
+
+    <!-- Clip patches to ball circle -->
+    <clipPath id="clip">
+      <circle cx="256" cy="256" r="198"/>
+    </clipPath>
+
+    <!--
+      Reusable top-pointing pentagon, radius 75, centered at origin.
+      Points at angles 270°, 342°, 54°, 126°, 198° (in SVG y-down coords):
+        (0,-75)  (71.3,-23.1)  (44.1,60.6)  (-44.1,60.6)  (-71.3,-23.1)
+    -->
+    <polygon id="p" points="0,-75 71.3,-23.1 44.1,60.6 -44.1,60.6 -71.3,-23.1"/>
+  </defs>
+
+  <!-- White ball -->
+  <circle cx="256" cy="256" r="198" fill="url(#ball)"/>
+
+  <!--
+    Soccer-ball patch pattern — 1 center + 5 outer pentagons.
+
+    Inner pentagon: centered at (256,256), no rotation (tip points up).
+
+    Outer pentagon centers: at radius 165 from (256,256) in directions
+    306°, 18°, 90°, 162°, 234° (between inner pentagon edges, 72° apart).
+    Each is rotated so its tip points toward the ball center.
+
+      OC0 (306°): (353,122) → tip at 126° → rotate(216)
+      OC1 ( 18°): (413,307) → tip at 198° → rotate(288)
+      OC2 ( 90°): (256,421) → tip at 270° → rotate(  0)
+      OC3 (162°): ( 99,307) → tip at 342° → rotate( 72)
+      OC4 (234°): (159,122) → tip at  54° → rotate(144)
+
+    The clip path cuts each outer pentagon at the ball edge, leaving
+    the dark "peek" patches characteristic of a soccer ball.
+  -->
+  <g fill="#111827" clip-path="url(#clip)">
+    <!-- Center -->
+    <use href="#p" transform="translate(256,256)"/>
+    <!-- Upper-right -->
+    <use href="#p" transform="translate(353,122) rotate(216)"/>
+    <!-- Right -->
+    <use href="#p" transform="translate(413,307) rotate(288)"/>
+    <!-- Bottom -->
+    <use href="#p" transform="translate(256,421) rotate(0)"/>
+    <!-- Left -->
+    <use href="#p" transform="translate(99,307)  rotate(72)"/>
+    <!-- Upper-left -->
+    <use href="#p" transform="translate(159,122) rotate(144)"/>
+  </g>
+
+  <!-- Thin seam lines: center pentagon to each outer patch -->
+  <g stroke="#555" stroke-width="3" stroke-linecap="round" clip-path="url(#clip)" opacity="0.35">
+    <line x1="256" y1="181" x2="256"  y2="122"/>   <!-- to top-right patch (via top vertex) -->
+    <line x1="327" y1="233" x2="353"  y2="122"/>   <!-- upper-right vertex to OC0 -->
+    <line x1="302" y1="316" x2="413"  y2="307"/>   <!-- lower-right vertex to OC1 -->
+    <line x1="256" y1="331" x2="256"  y2="421"/>   <!-- bottom midpoint to OC2 -->
+    <line x1="210" y1="316" x2="99"   y2="307"/>   <!-- lower-left vertex to OC3 -->
+    <line x1="185" y1="233" x2="159"  y2="122"/>   <!-- upper-left vertex to OC4 -->
+  </g>
+
+  <!-- Cyan glow ring (FAIRPLAY brand colour) -->
+  <circle cx="256" cy="256" r="198" fill="none" stroke="#00d4ff" stroke-width="8" opacity="0.5"/>
+
+  <!-- Subtle inner highlight for depth -->
+  <ellipse cx="220" cy="196" rx="48" ry="28"
+           fill="white" opacity="0.18"
+           transform="rotate(-30, 220, 196)"/>
 </svg>
